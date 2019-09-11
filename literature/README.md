@@ -8,3 +8,4 @@
 5. Animating Arbitrary Objects via Deep Motion Transfer [pdf](http://openaccess.thecvf.com/content_CVPR_2019/papers/Siarohin_Animating_Arbitrary_Objects_via_Deep_Motion_Transfer_CVPR_2019_paper.pdf)
 6. Learning Landmarks from Unaligned Data using Image Translation [pdf](https://arxiv.org/pdf/1907.02055.pdf)
 7. Action2Vec: A Crossmodal Embedding Approach to Action Learning [pdf](https://arxiv.org/pdf/1901.00484.pdf)
+8. Everybody Dance Now [pdf](https://arxiv.org/pdf/1808.07371.pdf)
