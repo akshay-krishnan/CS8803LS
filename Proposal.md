@@ -4,7 +4,9 @@
 
 **Generative**: We use a generrative model
 
-**Disentangled**: We wish to extract the action embedding only, which is object-agnostic. 
+**Disentangled**: We wish to extract the action embedding only, which is object-agnostic.
 
 
 
+## Model
+![](framework.png)
