@@ -9,4 +9,4 @@
 
 
 ## Model
-![Model](framework.png)
+![Model](Framework.png)
