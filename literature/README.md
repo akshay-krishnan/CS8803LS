@@ -9,3 +9,6 @@
 6. Learning Landmarks from Unaligned Data using Image Translation [pdf](https://arxiv.org/pdf/1907.02055.pdf)
 7. Action2Vec: A Crossmodal Embedding Approach to Action Learning [pdf](https://arxiv.org/pdf/1901.00484.pdf)
 8. Everybody Dance Now [pdf](https://arxiv.org/pdf/1808.07371.pdf)
+
+9. Generating videos with scene dynamics [pdf](https://arxiv.org/pdf/1609.02612.pdf)
+- Uses a two stage spatio-temporal (3D conv) Generator coupled with a discriminator.
