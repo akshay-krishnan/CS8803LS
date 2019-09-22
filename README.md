@@ -10,3 +10,6 @@
 
 ## Model
 ![Model](Framework.png)
+
+## Slides
+[Proposal](https://docs.google.com/presentation/d/1tsfbN8aLZl1RS3epBdQ2Jkkthdxr8mmmnycfGUP0ld8/edit?usp=sharing)
