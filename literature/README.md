@@ -14,3 +14,4 @@
 - Uses a two stage spatio-temporal (3D conv) Generator coupled with a discriminator.
 10. MoCoGAN - [pdf](https://arxiv.org/pdf/1707.04993.pdf)
 - GAN that decomposes content and motion in videos. 
+11 - MCNET - Motion and content decompising using LSTM and autoencoders. [pdf](https://arxiv.org/pdf/1706.08033.pdf)
