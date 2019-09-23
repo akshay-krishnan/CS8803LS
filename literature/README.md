@@ -12,3 +12,5 @@
 
 9. Generating videos with scene dynamics [pdf](https://arxiv.org/pdf/1609.02612.pdf)
 - Uses a two stage spatio-temporal (3D conv) Generator coupled with a discriminator.
+10. MoCoGAN - [pdf] (https://arxiv.org/pdf/1707.04993.pdf)
+- GAN that decomposes content and motion in videos. 
