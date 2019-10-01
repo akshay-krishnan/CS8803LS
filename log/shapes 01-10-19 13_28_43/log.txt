@@ -1,0 +1,16 @@
+00000000) layer-0_rec - 5.08056; layer-1_rec - 0.86869; layer-2_rec - 2.03666; layer-3_rec - 2.21955; layer-4_rec - 0.01498; gen_gan - 1.09255; disc_gan - 1.09451
+00000200) layer-0_rec - 1.19022; layer-1_rec - 0.20949; layer-2_rec - 0.43874; layer-3_rec - 0.40582; layer-4_rec - 0.00588; gen_gan - 0.37169; disc_gan - 0.55506
+00000400) layer-0_rec - 0.07944; layer-1_rec - 0.01564; layer-2_rec - 0.14612; layer-3_rec - 0.11693; layer-4_rec - 0.00215; gen_gan - 0.25030; disc_gan - 0.49998
+00000600) layer-0_rec - 0.04265; layer-1_rec - 0.00878; layer-2_rec - 0.10111; layer-3_rec - 0.07761; layer-4_rec - 0.00137; gen_gan - 0.25025; disc_gan - 0.50012
+00000800) layer-0_rec - 0.03387; layer-1_rec - 0.00743; layer-2_rec - 0.09211; layer-3_rec - 0.07626; layer-4_rec - 0.00145; gen_gan - 0.25013; disc_gan - 0.50008
+00001000) layer-0_rec - 0.02591; layer-1_rec - 0.00575; layer-2_rec - 0.06278; layer-3_rec - 0.04419; layer-4_rec - 0.00078; gen_gan - 0.25008; disc_gan - 0.50014
+00001200) layer-0_rec - 0.02192; layer-1_rec - 0.00489; layer-2_rec - 0.05266; layer-3_rec - 0.03568; layer-4_rec - 0.00061; gen_gan - 0.25009; disc_gan - 0.50011
+00001400) layer-0_rec - 0.02016; layer-1_rec - 0.00457; layer-2_rec - 0.04671; layer-3_rec - 0.03010; layer-4_rec - 0.00052; gen_gan - 0.25012; disc_gan - 0.50010
+00001600) layer-0_rec - 0.01812; layer-1_rec - 0.00415; layer-2_rec - 0.04049; layer-3_rec - 0.02516; layer-4_rec - 0.00045; gen_gan - 0.25003; disc_gan - 0.50010
+00001800) layer-0_rec - 0.01719; layer-1_rec - 0.00400; layer-2_rec - 0.03800; layer-3_rec - 0.02340; layer-4_rec - 0.00041; gen_gan - 0.25008; disc_gan - 0.50009
+00002000) layer-0_rec - 0.01606; layer-1_rec - 0.00377; layer-2_rec - 0.03594; layer-3_rec - 0.02144; layer-4_rec - 0.00037; gen_gan - 0.25010; disc_gan - 0.50007
+00002200) layer-0_rec - 0.01470; layer-1_rec - 0.00343; layer-2_rec - 0.02740; layer-3_rec - 0.01579; layer-4_rec - 0.00028; gen_gan - 0.25003; disc_gan - 0.50008
+00002400) layer-0_rec - 0.01407; layer-1_rec - 0.00328; layer-2_rec - 0.02554; layer-3_rec - 0.01447; layer-4_rec - 0.00025; gen_gan - 0.25012; disc_gan - 0.50006
+00002600) layer-0_rec - 0.01442; layer-1_rec - 0.00338; layer-2_rec - 0.02606; layer-3_rec - 0.01491; layer-4_rec - 0.00026; gen_gan - 0.25004; disc_gan - 0.50006
+00002800) layer-0_rec - 0.01428; layer-1_rec - 0.00332; layer-2_rec - 0.02508; layer-3_rec - 0.01435; layer-4_rec - 0.00025; gen_gan - 0.25004; disc_gan - 0.50006
+00003000) layer-0_rec - 0.01414; layer-1_rec - 0.00327; layer-2_rec - 0.02507; layer-3_rec - 0.01433; layer-4_rec - 0.00025; gen_gan - 0.25009; disc_gan - 0.50004
