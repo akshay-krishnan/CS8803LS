@@ -39,7 +39,7 @@ The result will be stored in ```demo.gif```. -->
 
 To train a model on specific dataset run:
 ```
-CUDA_VISIBLE_DEVICES=0 python run.py --config config/dataset_name.yaml
+CUDA_VISIBLE_DEVICES=0 python3 run.py --config config/dataset_name.yaml
 ```
 The code will create a folder in the log directory (each run will create a time-stamped new directory).
 Checkpoints will be saved to this folder.
@@ -85,7 +85,7 @@ The approximately aligned pairs of videos are given in the data folder. (e.g  ``
 
 In order to perform image-to-video translation run:
 ```
-CUDA_VISIBLE_DEVICES=0 python run.py --config config/dataset_name.yaml --mode prediction --checkpoint path/to/checkpoint
+CUDA_VISIBLE_DEVICES=0 python3 run.py --config config/dataset_name.yaml --mode prediction --checkpoint path/to/checkpoint
 ```
 
 ### Datasets
@@ -96,12 +96,12 @@ Training takes about 1 hour.
 2) **Actions**. This dataset is also saved along with repository.
  And training takes about 4 hours.
 
-### Training on your own dataset
+<!-- ### Training on your own dataset
 1) Resize all the videos to the same size e.g 128x128, the videos can be in '.gif' or '.mp4' format. But we recommend to make them stacked '.png' (see data/shapes), because this format is lossless.
 
 2) Create a folder ```data/dataset_name``` with 2 subfolders ```train``` and ```test```, put training videos in the ```train``` and testing in the ```test```.
 
-3) Create a config ```config/dataset_name.yaml``` (it is better to start from one of the existing configs, for 64x64 videos ```config/nemo.yaml```, for 128x128 ```config\moving-gif.yaml```, for 256x256 ```config\vox.yaml```), in dataset_params specify the root dir the ```root_dir:  data/dataset_name```. Also adjust the number of epoch in train_params.
+3) Create a config ```config/dataset_name.yaml``` (it is better to start from one of the existing configs, for 64x64 videos ```config/nemo.yaml```, for 128x128 ```config\moving-gif.yaml```, for 256x256 ```config\vox.yaml```), in dataset_params specify the root dir the ```root_dir:  data/dataset_name```. Also adjust the number of epoch in train_params. -->
 
 ## Reference
 [1][Animating Arbitrary Objects via Deep Motion Transfer](https://arxiv.org/abs/1812.08861) by Aliaksandr Siarohin, Stéphane Lathuilière, [Sergey Tulyakov](http://stulyakov.com), [Elisa Ricci](http://elisaricci.eu/) and [Nicu Sebe](http://disi.unitn.it/~sebe/).
