@@ -46,6 +46,13 @@ class Logger:
         cpk['it'] = self.it
         torch.save(cpk, os.path.join(self.cpk_dir, '%s-checkpoint.pth.tar' % str(self.epoch).zfill(self.zfill_num)))
 
+    def save_reconstruction(self, reconstruction):
+        images = reconstruction.data.cpu().numpy()
+        print(images.shape)
+        for i in range(0, images.shape[0]):
+            imageio.mimwrite(os.path.join(self.visualizations_dir, "%s-rec-%d.gif" % (str(self.it).zfill(self.zfill_num), i)), images[i])
+
+
     @staticmethod
     def load_cpk(checkpoint_path, generator=None, discriminator=None, kp_detector=None,
                  optimizer_generator=None, optimizer_discriminator=None, optimizer_kp_detector=None):
@@ -80,6 +87,15 @@ class Logger:
         if it % self.log_freq == 0:
             self.log_scores(self.names)
             self.visualize_rec(inp, out)
+
+    def log_iter_hourglass(self, it, names, values, inp, out):
+        print(inp, out)
+        self.it = it
+        self.names = names
+        self.loss_list.append(values)
+        if it % self.log_freq == 0:
+            self.log_scores(self.names)
+            self.save_reconstruction(out)
 
     def log_epoch(self, epoch, models):
         self.epoch = epoch
