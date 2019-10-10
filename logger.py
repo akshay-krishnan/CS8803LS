@@ -48,9 +48,10 @@ class Logger:
 
     def save_reconstruction(self, reconstruction):
         images = reconstruction.data.cpu().numpy()
-        print(images.shape)
         for i in range(0, images.shape[0]):
-            imageio.mimwrite(os.path.join(self.visualizations_dir, "%s-rec-%d.gif" % (str(self.it).zfill(self.zfill_num), i)), images[i])
+            temp_image = images[i].transpose(1,2,3,0)[0]
+            temp_image = (255 * temp_image).astype(np.uint8)
+            imageio.imwrite(os.path.join(self.visualizations_dir, "%s-rec-%d.png" % (str(self.it).zfill(self.zfill_num), i)), temp_image)
 
 
     @staticmethod
@@ -89,7 +90,6 @@ class Logger:
             self.visualize_rec(inp, out)
 
     def log_iter_hourglass(self, it, names, values, inp, out):
-        print(inp, out)
         self.it = it
         self.names = names
         self.loss_list.append(values)

@@ -351,7 +351,6 @@ class SplitSourceDriving(object):
         return {'video': video.transpose((3, 0, 1, 2)),
                 'source': source.transpose((3, 0, 1, 2))}
 
-
 class VideoToTensor(object):
     """Convert video array to Tensor."""
 

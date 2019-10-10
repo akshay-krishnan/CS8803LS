@@ -80,11 +80,9 @@ class FramesDataset(Dataset):
         img_name = os.path.join(self.root_dir, self.images[idx])
 
         video_array = read_video(img_name, image_shape=self.image_shape)
-
         out = self.transform(video_array)
         # add names
         out['name'] = os.path.basename(img_name)
-
         return out
 
 
