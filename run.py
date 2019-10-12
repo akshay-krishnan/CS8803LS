@@ -19,6 +19,8 @@ from reconstruction import reconstruction
 from transfer import transfer
 from prediction import prediction
 
+from motion import lookkp
+
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--config", required=True, help="path to config")
@@ -79,3 +81,6 @@ if __name__ == "__main__":
     elif opt.mode == "prediction":
         print("Prediction...")
         prediction(config, generator, kp_detector, opt.checkpoint, log_dir)
+    elif opt.mode == "lookkp":
+        print("Look Keypoints...")
+        lookkp(config, generator, kp_detector, opt.checkpoint, log_dir)
