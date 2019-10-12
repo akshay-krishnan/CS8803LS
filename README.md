@@ -37,6 +37,10 @@ The result will be stored in ```demo.gif```. -->
 
 ### Training
 
+Training the content hourglass model : 
+```
+python3 train_hourglass.py --config config/shapes2.yaml
+```
 To train a model on specific dataset run:
 ```
 CUDA_VISIBLE_DEVICES=0 python3 run.py --config config/dataset_name.yaml
