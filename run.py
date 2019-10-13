@@ -1,4 +1,5 @@
 import matplotlib
+import torch
 
 matplotlib.use('Agg')
 
@@ -24,7 +25,7 @@ from motion import lookkp
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--config", required=True, help="path to config")
-    parser.add_argument("--mode", default="train", choices=["train", "reconstruction", "transfer", "prediction"])
+    parser.add_argument("--mode", default="train", choices=["lookkp", "train", "reconstruction", "transfer", "prediction"])
     parser.add_argument("--log_dir", default='log', help="path to log into")
     parser.add_argument("--checkpoint", default=None, help="path to checkpoint to restore")
     parser.add_argument("--device_ids", default="0", type=lambda x: list(map(int, x.split(','))),
@@ -32,7 +33,11 @@ if __name__ == "__main__":
     parser.add_argument("--verbose", dest="verbose", action="store_true", help="Print model architecture")
     parser.set_defaults(verbose=False)
 
+
     opt = parser.parse_args()
+    if not torch.cuda.is_available():
+        opt.device_ids[0] = 'cpu'
+
     with open(opt.config) as f:
         config = yaml.load(f)
         blocks_discriminator = config['model_params']['discriminator_params']['num_blocks']
@@ -83,4 +88,4 @@ if __name__ == "__main__":
         prediction(config, generator, kp_detector, opt.checkpoint, log_dir)
     elif opt.mode == "lookkp":
         print("Look Keypoints...")
-        lookkp(config, generator, kp_detector, opt.checkpoint, log_dir)
+        lookkp(config, generator, kp_detector, opt.checkpoint, log_dir, dataset)
