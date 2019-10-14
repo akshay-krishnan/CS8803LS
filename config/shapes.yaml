@@ -74,6 +74,7 @@ train_motion_embedding_params:
   lr: 2.0e-4
   batch_size: 16
   loss_weights:
+    reconstruction: []
     reconstruction_deformed: 0
     motion_embedding_reconstruction: 1
     generator_gan: 0

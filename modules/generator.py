@@ -92,9 +92,8 @@ class MotionEmbeddingGenerator(nn.Module):
         super(MotionEmbeddingGenerator, self).__init__()
 
         self.motion_encoder = MotionEmbeddingEncoder(in_features=6, out_features=1, num_blocks=num_blocks)
-        self.motion_decoder = MotionEmbeddingDecoder(block_expansion=block_expansion, in_features=num_channels + num_kp,
-                                                     out_features=num_channels, max_features=max_features, num_blocks=num_blocks,
-                                                     use_last_conv=False)
+        self.motion_decoder = MotionEmbeddingDecoder(in_features=num_channels + num_kp,
+                                                     out_features=num_channels, num_blocks=num_blocks)
         self.num_kp = num_kp
 
     def forward(self, d, kp_video, x_video):

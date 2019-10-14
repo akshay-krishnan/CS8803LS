@@ -104,18 +104,16 @@ def train_motion_embedding(config, generator, motion_generator, kp_detector, che
                     kp_video = cat_dict([kp_detector(x['video'][:, :, i:(i + 1)]) for i in range(d)], dim=1)
                     
 
-                loss_values = motion_generator_full_par(d, kp_video, x['video'])
-                loss_values = [val.mean() for val in loss_values]
-                loss = sum(loss_values)
+                loss = motion_generator_full_par(d, kp_video, x['video'])
 
                 loss.backward()
                 optimizer_generator.step()
                 optimizer_generator.zero_grad()
-                generator_loss_values = [val.detach().cpu().numpy() for val in loss_values]
+                generator_loss_values = [loss.detach().cpu().numpy()]
 
                 logger.log_iter(it,
                                 names=generator_loss_names(train_params['loss_weights']),
-                                values=generator_loss_values)
+                                values=generator_loss_values, inp=x)
                 it += 1
 
             scheduler_generator.step()

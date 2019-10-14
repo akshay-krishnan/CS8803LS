@@ -82,14 +82,29 @@ class UpBlock3D(nn.Module):
 
     def forward(self, x):
         
-        print(x.shape)
         out = F.interpolate(x, scale_factor=(1, 2, 2))
-        print(out.shape)
         out = self.conv(out)
-        print(out.shape)
         out = self.norm(out)
         out = F.relu(out)
-        print("=====")
+        return out
+
+class MotionEmbeddingUpBlock2D(nn.Module):
+    """
+    Simple block for processing image (decoder).
+    """
+
+    def __init__(self, in_features, out_features, kernel_size=3, padding=1):
+        super(MotionEmbeddingUpBlock2D, self).__init__()
+
+        self.conv = nn.Conv2d(in_channels=in_features, out_channels=out_features, kernel_size=kernel_size,
+                              padding=padding)
+        self.norm = nn.BatchNorm2d(out_features)
+
+    def forward(self, x):
+
+        out = self.conv(x)
+        out = self.norm(out)
+        out = F.relu(out)
         return out
 
 
@@ -172,7 +187,7 @@ class Decoder(nn.Module):
 
         for i in range(num_blocks)[::-1]:
             up_blocks.append(UpBlock3D((1 if i == num_blocks - 1 else 2) * min(max_features, block_expansion * (
-                2 ** (i + 1))) + additional_features_for_block,
+                                       2 ** (i + 1))) + additional_features_for_block,
                                        min(max_features, block_expansion * (2 ** i)),
                                        kernel_size=kernel_size, padding=padding))
 
@@ -238,24 +253,19 @@ class MotionEmbeddingDecoder(nn.Module):
     Hourglass Decoder
     """
 
-    def __init__(self, block_expansion, in_features, out_features, num_blocks=3, max_features=256, temporal=False, use_last_conv=True):
+    def __init__(self, in_features, out_features, num_blocks=3):
         super(MotionEmbeddingDecoder, self).__init__()
-        kernel_size = (in_features, 3, 3) if temporal else (1, 3, 3)
-        padding = (1, 1, 1) if temporal else (0, 1, 1)
+        kernel_size = (3, 3)
+        padding = (1, 1)
 
         up_blocks = []
 
-        for i in range(num_blocks)[::-1]:
-            up_blocks.append(UpBlock3D((1 if i == num_blocks - 1 else 2) * min(max_features, block_expansion * (
-                2 ** (i + 1))), min(max_features, block_expansion * (2 ** i)), kernel_size=kernel_size, padding=padding))
-
+        up_blocks.append(MotionEmbeddingUpBlock2D(in_features, 64, kernel_size=kernel_size, padding=padding))
+        up_blocks.append(MotionEmbeddingUpBlock2D(64 + in_features, 128, kernel_size=kernel_size, padding=padding))
         self.up_blocks = nn.ModuleList(up_blocks)
-        if use_last_conv:
-            self.conv = nn.Conv3d(in_channels=block_expansion + in_features,
-                                  out_channels=out_features, 
-                                  kernel_size=kernel_size, padding=padding)
-        else:
-            self.conv = None
+
+        self.conv = nn.Conv2d(in_channels=128 + in_features, out_channels=out_features, kernel_size=kernel_size,
+                                padding=padding)
 
     def forward(self, source_image, motion_embed):
 
@@ -267,11 +277,9 @@ class MotionEmbeddingDecoder(nn.Module):
         for up_block in self.up_blocks:
             out = up_block(out)
             out = torch.cat([out, x], dim=1)
-        
-        if self.conv is not None:
-            return self.conv(out)
-        else:
-            return out
+
+        out = self.conv(out)
+        return out
 
 class MotionEmbeddingEncoder(nn.Module):
     """

@@ -29,6 +29,9 @@ class Logger:
     def log_scores(self, loss_names):
         loss_mean = np.array(self.loss_list).mean(axis=0)
 
+        print(loss_names)
+        print(loss_mean)
+
         loss_string = "; ".join(["%s - %.5f" % (name, value) for name, value in zip(loss_names, loss_mean)])
         loss_string = str(self.it).zfill(self.zfill_num) + ") " + loss_string
 
@@ -76,13 +79,15 @@ class Logger:
             self.save_cpk()
         self.log_file.close()
 
-    def log_iter(self, it, names, values, inp, out):
+    def log_iter(self, it, names, values, inp, out = None):
         self.it = it
         self.names = names
         self.loss_list.append(values)
         if it % self.log_freq == 0:
             self.log_scores(self.names)
-            self.visualize_rec(inp, out)
+
+            if out is not None:
+                self.visualize_rec(inp, out)
 
     def log_epoch(self, epoch, models):
         self.epoch = epoch
