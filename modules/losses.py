@@ -11,7 +11,7 @@ def reconstruction_loss(prediction, target, weight):
     return weight * mean_batch(torch.abs(prediction - target))
 
 def motion_embedding_reconstruction_loss(prediction, target):
-    return torch.norm(prediction - target[:, :, 1:], 2)
+    return torch.norm(prediction - target[:, :, 1:], 2) / target.shape[0]
 
 def generator_gan_loss(discriminator_maps_generated, weight):
     scores_generated = discriminator_maps_generated[-1]
