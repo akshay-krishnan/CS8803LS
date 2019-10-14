@@ -11,7 +11,7 @@ from shutil import copy
 
 from frames_dataset import FramesDataset
 
-from modules.generator import MotionTransferGenerator
+from modules.generator import MotionTransferGenerator, MotionEmbeddingGenerator
 from modules.discriminator import Discriminator
 from modules.keypoint_detector import KPDetector
 
@@ -19,13 +19,12 @@ from train import train
 from reconstruction import reconstruction
 from transfer import transfer
 from prediction import prediction
-
-from motion import lookkp
+from motion import train_motion_embedding
 
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--config", required=True, help="path to config")
-    parser.add_argument("--mode", default="train", choices=["lookkp", "train", "reconstruction", "transfer", "prediction"])
+    parser.add_argument("--mode", default="train", choices=["train_motion_embedding", "train", "reconstruction", "transfer", "prediction"])
     parser.add_argument("--log_dir", default='log', help="path to log into")
     parser.add_argument("--checkpoint", default=None, help="path to checkpoint to restore")
     parser.add_argument("--device_ids", default="0", type=lambda x: list(map(int, x.split(','))),
@@ -60,6 +59,12 @@ if __name__ == "__main__":
     if opt.verbose:
         print(generator)
 
+    motion_generator = MotionEmbeddingGenerator(**config['model_params']['motion_generator_params'],
+                                                **config['model_params']['common_params'])
+    motion_generator.to(opt.device_ids[0])
+    if opt.verbose:
+        print(motion_generator)
+
     discriminator = Discriminator(**config['model_params']['discriminator_params'],
                                   **config['model_params']['common_params'])
     discriminator.to(opt.device_ids[0])
@@ -86,6 +91,6 @@ if __name__ == "__main__":
     elif opt.mode == "prediction":
         print("Prediction...")
         prediction(config, generator, kp_detector, opt.checkpoint, log_dir)
-    elif opt.mode == "lookkp":
-        print("Look Keypoints...")
-        lookkp(config, generator, kp_detector, opt.checkpoint, log_dir, dataset)
+    elif opt.mode == "train_motion_embedding":
+        print("Train motion embedding from pretrained keypoints ...")
+        train_motion_embedding(config, generator, motion_generator, kp_detector, opt.checkpoint, log_dir, dataset, opt.device_ids)

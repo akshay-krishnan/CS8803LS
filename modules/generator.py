@@ -2,7 +2,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-from modules.util import Encoder, Decoder, ResBlock3D
+from modules.util import Encoder, Decoder, ResBlock3D, MotionEmbeddingEncoder, MotionEmbeddingDecoder
 from modules.dense_motion_module import DenseMotionModule, IdentityDeformation
 from modules.movement_embedding import MovementEmbeddingModule
 
@@ -80,3 +80,54 @@ class MotionTransferGenerator(nn.Module):
         video_prediction = torch.sigmoid(video_prediction)
 
         return {"video_prediction": video_prediction, "video_deformed": video_deformed}
+
+
+class MotionEmbeddingGenerator(nn.Module):
+    """
+    Motion embedding generator.
+    """
+
+    def __init__(self, num_channels, num_kp, kp_variance, block_expansion, max_features, num_blocks):
+
+        super(MotionEmbeddingGenerator, self).__init__()
+
+        self.motion_encoder = MotionEmbeddingEncoder(in_features=6, out_features=1, num_blocks=num_blocks)
+        self.motion_decoder = MotionEmbeddingDecoder(block_expansion=block_expansion, in_features=num_channels + num_kp,
+                                                     out_features=num_channels, max_features=max_features, num_blocks=num_blocks,
+                                                     use_last_conv=False)
+        self.num_kp = num_kp
+
+    def forward(self, d, kp_video, x_video):
+
+
+        # kp_video['mean']: [bz, #frame, #kp, 2]
+        # kp_video['var']: [bz, #frame, #kp, 2, 2]
+        # x_video: [bz, ch, #frames, H, W]
+        video_prediction = []
+        kp_diff = {}
+        for i in range(d - 1):
+            
+            kp_diff['mean'] = kp_video['mean'][:, i + 1] - kp_video['mean'][:, i]
+            kp_diff['var'] = kp_video['var'][:, i + 1] - kp_video['var'][:, i]
+            
+            kp_diff['mean'] = torch.squeeze(kp_diff['mean'], 1)
+            kp_diff['var'] = kp_diff['var'].view(kp_diff['var'].shape[0], self.num_kp, -1)
+
+            source_diff = torch.cat((kp_diff['mean'], kp_diff['var']), 2)
+            source_image = torch.squeeze(x_video[:, :, i], 2)
+
+            # source_diff: [bz, #kp, 6]
+            # motion_embed: [bz, #kp, 1] -> [bz, #kp, H, W]
+            motion_embed = self.motion_encoder(x = source_diff)
+            motion_embed = motion_embed.unsqueeze(3).repeat(1, 1, x_video.shape[-2], x_video.shape[-1])
+
+            # source_image: [bz, ch, H, W]
+            # motion_embed: [bz, #kp, H, W]
+            prediction = self.motion_decoder(source_image = source_image, motion_embed = motion_embed)
+
+            # prediction: [bz, ch, H, W] -> [bz, ch, 1, H, W]
+            video_prediction.append(prediction)
+
+        # video_prediction: [bz, ch, #frames, H, W]
+        video_prediction = torch.stack(video_prediction, 2)
+        return video_prediction
