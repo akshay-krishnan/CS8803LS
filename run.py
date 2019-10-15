@@ -77,7 +77,7 @@ if __name__ == "__main__":
     if opt.verbose:
         print(kp_detector)
 
-    dataset = FramesDataset(is_train=(opt.mode == 'train'), **config['dataset_params'])
+    dataset = FramesDataset(is_train=('train' in opt.mode), **config['dataset_params'])
 
     if opt.mode == 'train':
         print("Training...")
@@ -93,4 +93,5 @@ if __name__ == "__main__":
         prediction(config, generator, kp_detector, opt.checkpoint, log_dir)
     elif opt.mode == "train_motion_embedding":
         print("Train motion embedding from pretrained keypoints ...")
-        train_motion_embedding(config, generator, motion_generator, kp_detector, opt.checkpoint, log_dir, dataset, opt.device_ids)
+        valid_dataset = FramesDataset(is_train=False, **config['dataset_params'])
+        train_motion_embedding(config, generator, motion_generator, kp_detector, opt.checkpoint, log_dir, dataset, valid_dataset, opt.device_ids)

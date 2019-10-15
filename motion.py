@@ -37,18 +37,34 @@ class MotionGeneratorFullModel(torch.nn.Module):
         self.generator = generator
         self.train_params = train_params
 
-    def forward(self, d, kp_video, x_video):
-        
-        # video_prediction: [bz, ch, #frames, H, W]
-        # x_video: [bz, ch, #frames, H, W]
+    def forward(self, d, kp_video):
 
-        video_prediction = self.generator(d, kp_video, x_video)
-        loss = motion_embedding_reconstruction_loss(video_prediction, x_video)
+        # video_prediction: [bz, #frames, #kp*6]
+        bz,frame,kp,_ = kp_video['mean'].shape
+        target = torch.cat([kp_video['mean'].view(bz,frame,-1)[:,1:,:],
+                            kp_video['var'].view(bz,frame,-1)[:,1:,:]
+                            ], -1)
+        kp_prediction = self.generator(d, kp_video)
+        loss = F.mse_loss(target.view(bz*(frame-1),-1), kp_prediction.view(bz*(frame-1),-1))
         return loss
 
+def valid_motion_embedding(dataloader, motion_generator, kp_detector):
+    motion_generator.eval()
+    print("Validation...")
+    cat_dict = lambda l, dim: {k: torch.cat([v[k] for v in l], dim=dim) for k in l[0]}
+    with torch.no_grad():
+        for it, x in tqdm(enumerate(dataloader)):
 
-def train_motion_embedding(config, generator, motion_generator, kp_detector, checkpoint, log_dir, dataset, device_ids):
-    
+            kp_appearance = kp_detector(x['video'][:, :, :1])
+            d = x['video'].shape[2]
+            kp_video = cat_dict([kp_detector(x['video'][:, :, i:(i + 1)]) for i in range(d)], dim=1)
+
+            motion_embed = motion_generator(d, kp_video, mode=1)
+            import ipdb; ipdb.set_trace()
+
+
+def train_motion_embedding(config, generator, motion_generator, kp_detector, checkpoint, log_dir, dataset, valid_dataset, device_ids):
+
     png_dir = os.path.join(log_dir, 'train_motion_embedding/png')
     log_dir = os.path.join(log_dir, 'train_motion_embedding')
 
@@ -58,7 +74,7 @@ def train_motion_embedding(config, generator, motion_generator, kp_detector, che
     if not os.path.exists(png_dir):
         os.makedirs(png_dir)
 
-    
+
     train_params = config['train_motion_embedding_params']
     optimizer_generator = torch.optim.Adam(motion_generator.parameters(), lr=train_params['lr'], betas=(0.5, 0.999))
 
@@ -73,28 +89,31 @@ def train_motion_embedding(config, generator, motion_generator, kp_detector, che
 
     scheduler_generator = MultiStepLR(optimizer_generator, train_params['epoch_milestones'], gamma=0.1,
                                       last_epoch=start_epoch - 1)
-    dataloader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=1)
+    dataloader = DataLoader(valid_dataset, batch_size=8, shuffle=True, num_workers=4)
+    valid_dataloader = DataLoader(valid_dataset, batch_size=1, shuffle=False, num_workers=4)
 
     loss_list = []
     motion_generator_full = MotionGeneratorFullModel(motion_generator, train_params)
     motion_generator_full_par = DataParallelWithCallback(motion_generator_full, device_ids=device_ids)
-    
+
     kp_detector = DataParallelWithCallback(kp_detector)
     generator.eval()
     kp_detector.eval()
     cat_dict = lambda l, dim: {k: torch.cat([v[k] for v in l], dim=dim) for k in l[0]}
 
     with Logger(log_dir=log_dir, visualizer_params=config['visualizer_params'], **train_params['log_params']) as logger:
+        valid_motion_embedding(valid_dataloader, motion_generator, kp_detector)
         for epoch in range(start_epoch, train_params['num_epochs']):
+            motion_generator.train()
             for it, x in tqdm(enumerate(dataloader)):
-                
+
                 with torch.no_grad():
-                    
+
                     # import ipdb; ipdb.set_trace()
 
                     # x['video']: [bz, ch, #frames, H, W]
                     # detect keypoint for first frame
-                    kp_appearance = kp_detector(x['video'][:, :, :1]) 
+                    kp_appearance = kp_detector(x['video'][:, :, :1])
                     # kp_appearance['mean']: [bz, frame idx, #kp, 2]
                     # kp_appearance['var']: [bz, frame idx, #kp, 2, 2]
 
@@ -102,7 +121,7 @@ def train_motion_embedding(config, generator, motion_generator, kp_detector, che
                     # kp_video['mean']: [bz, #frame, #kp, 2]
                     # kp_video['var']: [bz, #frame, #kp, 2, 2]
                     kp_video = cat_dict([kp_detector(x['video'][:, :, i:(i + 1)]) for i in range(d)], dim=1)
-                    
+
 
                 loss = motion_generator_full_par(d, kp_video, x['video'])
 
@@ -114,7 +133,8 @@ def train_motion_embedding(config, generator, motion_generator, kp_detector, che
                 logger.log_iter(it,
                                 names=generator_loss_names(train_params['loss_weights']),
                                 values=generator_loss_values, inp=x)
-                it += 1
+
+            valid_motion_embedding(valid_dataloader, motion_generator, kp_detector)
 
             scheduler_generator.step()
             logger.log_epoch(epoch, {'generator': generator,

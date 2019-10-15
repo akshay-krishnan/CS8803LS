@@ -81,7 +81,7 @@ class UpBlock3D(nn.Module):
         self.norm = BatchNorm3d(out_features, affine=True)
 
     def forward(self, x):
-        
+
         out = F.interpolate(x, scale_factor=(1, 2, 2))
         out = self.conv(out)
         out = self.norm(out)
@@ -246,67 +246,6 @@ class Hourglass(nn.Module):
 
     def forward(self, x):
         return self.decoder(self.encoder(x))
-
-
-class MotionEmbeddingDecoder(nn.Module):
-    """
-    Hourglass Decoder
-    """
-
-    def __init__(self, in_features, out_features, num_blocks=3):
-        super(MotionEmbeddingDecoder, self).__init__()
-        kernel_size = (3, 3)
-        padding = (1, 1)
-
-        up_blocks = []
-
-        up_blocks.append(MotionEmbeddingUpBlock2D(in_features, 64, kernel_size=kernel_size, padding=padding))
-        up_blocks.append(MotionEmbeddingUpBlock2D(64 + in_features, 128, kernel_size=kernel_size, padding=padding))
-        self.up_blocks = nn.ModuleList(up_blocks)
-
-        self.conv = nn.Conv2d(in_channels=128 + in_features, out_channels=out_features, kernel_size=kernel_size,
-                                padding=padding)
-
-    def forward(self, source_image, motion_embed):
-
-        # x: [bz, ch + #kp, H, W]
-        # out: [bz, ch, H, W]
-        x = torch.cat((source_image, motion_embed), 1)
-
-        out = x
-        for up_block in self.up_blocks:
-            out = up_block(out)
-            out = torch.cat([out, x], dim=1)
-
-        out = self.conv(out)
-        return out
-
-class MotionEmbeddingEncoder(nn.Module):
-    """
-    MLP Encoder
-    """
-
-    def __init__(self, in_features=6, out_features=1, num_blocks=3):
-        super(MotionEmbeddingEncoder, self).__init__()
-
-        down_blocks = []
-        down_blocks.append(nn.Linear(in_features, 32))
-        down_blocks.append(nn.Linear(32, 64))
-        down_blocks.append(nn.Linear(64, out_features))
-        self.down_blocks = nn.ModuleList(down_blocks)
-
-    def forward(self, x):
-
-        # x: [bz, #kp, 6]
-        # out: [bz, #kp, 1]
-        out = x
-        for down_block in self.down_blocks:
-            out = down_block(out)
-        
-        return out
-
-
-
 
 def matrix_inverse(batch_of_matrix, eps=0):
     if eps != 0:
