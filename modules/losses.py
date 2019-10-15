@@ -63,5 +63,13 @@ def generator_loss(discriminator_maps_generated, discriminator_maps_real, video_
 def discriminator_loss(discriminator_maps_generated, discriminator_maps_real, loss_weights):
     loss_values = [discriminator_gan_loss(discriminator_maps_generated, discriminator_maps_real,
                                           loss_weights['discriminator_gan'])]
-
     return loss_values
+
+def video_reconstruction_loss(video1, video2):
+    count = 0
+    loss = 0
+    for i in range(len(video1)):
+        loss += torch.dist(video1[i], video2[i], 2)
+        count += 1
+    loss = loss/count
+    return loss
