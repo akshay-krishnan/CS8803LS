@@ -37,9 +37,9 @@ The result will be stored in ```demo.gif```. -->
 
 ### Training
 
-Training the content hourglass model : 
+Training the model : 
 ```
-python3 train_hourglass.py --config config/shapes2.yaml
+python3 run_update1.py --config config/actions.yaml --mode train --verbose
 ```
 To train a model on specific dataset run:
 ```
