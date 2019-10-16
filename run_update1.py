@@ -18,11 +18,12 @@ from train_update1 import  train
 from reconstruction import reconstruction
 from transfer import transfer
 from prediction import prediction
+from infer_update1 import infer
 
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--config", required=True, help="path to config")
-    parser.add_argument("--mode", default="train", choices=["train", "reconstruction", "transfer", "prediction"])
+    parser.add_argument("--mode", default="train", choices=["train", "reconstruction", "transfer", "infer"])
     parser.add_argument("--log_dir", default='log', help="path to log into")
     parser.add_argument("--checkpoint", default=None, help="path to checkpoint to restore")
     parser.add_argument("--device_ids", default="0", type=lambda x: list(map(int, x.split(','))),
@@ -82,6 +83,7 @@ if __name__ == "__main__":
     # # elif opt.mode == 'transfer':
     # #     print("Transfer...")
     # #     transfer(config, generator, kp_detector, opt.checkpoint, log_dir, dataset)
-    # elif opt.mode == "prediction":
-    #     print("Prediction...")
-    #     prediction(config, content_encoder, motion_encoder, sequence_model, opt.checkpoint, log_dir)
+    elif opt.mode == "infer":
+        print("Inference...")
+        infer(config, content_encoder, motion_encoder, sequence_model, decoder,
+              opt.checkpoint, log_dir, dataset, opt.device_ids)

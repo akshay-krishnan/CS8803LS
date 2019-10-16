@@ -343,13 +343,21 @@ class SelectRandomFrames(object):
             selected = clip[selected_index]
         return selected
 
+class SelectFrames(object):
+    def __init__(self, number_of_frames=17, skip_frame_count=2):
+        self.number_of_frames = number_of_frames
+        self.skip_frame_count = skip_frame_count
+
+    def __call__(self, clip):
+        return clip[np.array(list(range(0, self.skip_frame_count*self.number_of_frames,
+                                 self.skip_frame_count)))]
 
 class SplitSourceDriving(object):
     def __call__(self, video):
-        source = np.array(video[:1], dtype='float32')
+        source = np.array(video[0], dtype='float32')
         video = np.array(video[1:], dtype='float32')
         return {'video': video.transpose((3, 0, 1, 2)),
-                'source': source.transpose((3, 0, 1, 2))}
+                'image': source.transpose((2, 0, 1))}
 
 class VideoToTensor(object):
     """Convert video array to Tensor."""
@@ -358,27 +366,42 @@ class VideoToTensor(object):
         driving = np.array(driving, dtype='float32')
         return {'video': driving.transpose((3, 0, 1, 2))}
 
-
 class AllAugmentationTransform:
     def __init__(self, resize_param=None, rotation_param=None, flip_param=None, crop_param=None, jitter_param=None):
         self.transforms = []
-        self.select = SelectRandomFrames()
+        # check whats happening here
+        # self.select = SelectRandomFrames()
+        self.select = SelectFrames()
         self.transforms.append(self.select)
 
-        if flip_param is not None:
-            self.transforms.append(RandomFlip(**flip_param))
+        # if flip_param is not None:
+        #     self.transforms.append(RandomFlip(**flip_param))
 
         if rotation_param is not None:
             self.transforms.append(RandomRotation(**rotation_param))
 
-        if resize_param is not None:
-            self.transforms.append(RandomResize(**resize_param))
-
-        if crop_param is not None:
-            self.transforms.append(RandomCrop(**crop_param))
+        # if resize_param is not None:
+        #     self.transforms.append(RandomResize(**resize_param))
+        #
+        # if crop_param is not None:
+        #     self.transforms.append(RandomCrop(**crop_param))
 
         if jitter_param is not None:
             self.transforms.append(ColorJitter(**jitter_param))
+
+        self.transforms.append(SplitSourceDriving())
+
+    def __call__(self, clip):
+        for t in self.transforms:
+            clip = t(clip)
+        return clip
+
+class InferenceAugmentationTransform:
+    def __init__(self):
+        self.transforms = []
+        # check whats happening here
+        self.select = SelectFrames()
+        self.transforms.append(self.select)
 
         self.transforms.append(SplitSourceDriving())
 

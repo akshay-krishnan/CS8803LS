@@ -18,8 +18,6 @@ dataset_params: #Parameters of the dataset
 
 model_params: #Parameters of the Monkey-Net
   common_params:
-    num_kp: 10 #Number of keypoint to use
-    kp_variance: 'matrix' #'matrix' for learning keypoint variance, 0.01 - for constant variance 0.01
     num_channels: 3 #number of channels in image
   kp_detector_params:
      temperature: 0.1 #Softmax temperature
@@ -53,6 +51,16 @@ model_params: #Parameters of the Monkey-Net
     block_expansion: 32 #Multiplier for number of neurons
     max_features: 256 #Maximum number of neurons
     num_blocks: 4 #Number of blocks
+  content_encoder_params:
+    block_expansion: 16
+    num_blocks: 3
+    max_features: 256
+  motion_encoder_params:
+    block_expansion: 16
+    num_blocks: 3
+    max_features: 256
+  decoder_params:
+  sequence_model_params:
 
 train_params:
   detach_kp_generator: False #Do not update keypoints with generator loss
@@ -60,15 +68,21 @@ train_params:
   num_epochs: 4500
   epoch_milestones: [3000] #Drop lr in this epochs
   lr: 2.0e-4
-  batch_size: 32
+  batch_size: 4
   loss_weights:
     reconstruction: [10, 10, 10, 10, 1] #Feature matching losses in discriminator featuremaps, first is simple L1
     reconstruction_deformed: 0 #Loss for checking if image deformed with optical flow match the target image
     generator_gan: 1 #LSGAN loss
     discriminator_gan: 1 #LSGAN loss
   log_params:
-    log_freq_iter: 200 #Log progress this number of iterations
-    cpk_freq_epoch: 5000 #Save checkpoint this number of epochs
+    log_freq_iter: 200 # Log progress this number of iterations
+    cpk_freq_epoch: 5000 # Save checkpoint this number of epochs
+
+infer_params:
+  batch_size: 4
+  log_params:
+    log_freq_iter: 1 # Log progress this number of iterations
+    cpk_freq_epoch: 5000 # Save checkpoint this number of epochs
 
 reconstruction_params: #Parameters for reconstruction task
   num_videos: null #Number of videos to use in reconstruction, null for all avaliable

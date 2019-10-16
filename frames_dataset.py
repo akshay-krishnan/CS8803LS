@@ -8,7 +8,7 @@ import numpy as np
 from torch.utils.data import Dataset
 import pandas as pd
 
-from augmentation import AllAugmentationTransform, VideoToTensor
+from augmentation import AllAugmentationTransform, InferenceAugmentationTransform
 
 
 def read_video(name, image_shape):
@@ -69,7 +69,7 @@ class FramesDataset(Dataset):
             if is_train:
                 self.transform = AllAugmentationTransform(**augmentation_params)
             else:
-                self.transform = VideoToTensor()
+                self.transform = InferenceAugmentationTransform()
         else:
             self.transform = transform
 
@@ -78,7 +78,6 @@ class FramesDataset(Dataset):
 
     def __getitem__(self, idx):
         img_name = os.path.join(self.root_dir, self.images[idx])
-
         video_array = read_video(img_name, image_shape=self.image_shape)
         out = self.transform(video_array)
         # add names

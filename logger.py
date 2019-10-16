@@ -10,13 +10,18 @@ import matplotlib.pyplot as plt
 
 class Logger:
     def __init__(self, log_dir, log_file_name='log.txt', log_freq_iter=100, cpk_freq_epoch=100,
-                 zfill_num=8, visualizer_params=None):
+                 zfill_num=8, visualizer_params=None, is_train=True):
 
         self.loss_list = []
         self.cpk_dir = log_dir
-        self.visualizations_dir = os.path.join(log_dir, 'train-vis')
+        if(is_train):
+            self.visualizations_dir = os.path.join(log_dir, 'train-vis')
+        else:
+            self.visualizations_dir = os.path.join(log_dir, 'test-vis')
+
         if not os.path.exists(self.visualizations_dir):
             os.makedirs(self.visualizations_dir)
+            print(self.visualizations_dir, "made")
         self.log_file = open(os.path.join(log_dir, log_file_name), 'a')
         self.log_freq = log_freq_iter
         self.cpk_freq = cpk_freq_epoch
@@ -36,6 +41,11 @@ class Logger:
         self.loss_list = []
         self.log_file.flush()
 
+    def log_losses(self, loss):
+        loss_string = "%d loss = %.5f" % (self.it, loss)
+        print(loss_string, file=self.log_file)
+        self.log_file.flush()
+
     def visualize_rec(self, inp, out):
         image = self.visualizer.visualize_reconstruction(inp, out)
         imageio.mimsave(os.path.join(self.visualizations_dir, "%s-rec.gif" % str(self.it).zfill(self.zfill_num)), image)
@@ -49,9 +59,19 @@ class Logger:
     def save_reconstruction(self, reconstruction):
         images = reconstruction.data.cpu().numpy()
         for i in range(0, images.shape[0]):
-            temp_image = images[i].transpose(1,2,3,0)[0]
+            temp_image = images[i].transpose(1,2,3,0)
             temp_image = (255 * temp_image).astype(np.uint8)
             imageio.imwrite(os.path.join(self.visualizations_dir, "%s-rec-%d.png" % (str(self.it).zfill(self.zfill_num), i)), temp_image)
+
+    def save_reconstruction_video(self, reconstruction):
+        images = reconstruction.data.cpu().numpy()
+        print("in saving reconstruction", images.shape)
+        for i in range(0, images.shape[0]):
+            temp_image = images[i].transpose(1,2,3,0)
+            temp_image = (255 * temp_image).astype(np.uint8)
+            print("saving video")
+            imageio.mimsave(os.path.join(self.visualizations_dir, "%s-rec-%d.gif" % (str(self.it).zfill(self.zfill_num), i)),
+                            temp_image)
 
 
     @staticmethod
@@ -73,6 +93,29 @@ class Logger:
 
         return checkpoint['epoch'], checkpoint['it']
 
+    @staticmethod
+    def load_checkpoint(checkpoint_path, content_encoder=None, motion_encoder=None, sequence_model=None,
+                 decoder=None, optimizer_content=None, optimizer_motion=None, optimizer_sequence=None,
+                        optimizer_decoder=None):
+        checkpoint = torch.load(checkpoint_path)
+        if content_encoder is not None:
+            content_encoder.load_state_dict(checkpoint['content_encoder'])
+        if motion_encoder is not None:
+            motion_encoder.load_state_dict(checkpoint['motion_encoder'])
+        if sequence_model is not None:
+            sequence_model.load_state_dict(checkpoint['sequence_model'])
+        if decoder is not None:
+            decoder.load_state_dict(checkpoint['decoder'])
+        if optimizer_content is not None:
+            optimizer_content.load_state_dict(checkpoint['optimizer_content'])
+        if optimizer_motion is not None:
+            optimizer_motion.load_state_dict(checkpoint['optimizer_motion'])
+        if optimizer_sequence is not None:
+            optimizer_sequence.load_state_dict(checkpoint['optimizer_sequence'])
+        if optimizer_decoder is not None:
+            optimizer_decoder.load_state_dict(checkpoint['optimizer_decoder'])
+        return checkpoint['epoch'], checkpoint['it']
+
     def __enter__(self):
         return self
 
@@ -88,6 +131,12 @@ class Logger:
         if it % self.log_freq == 0:
             self.log_scores(self.names)
             self.visualize_rec(inp, out)
+
+    def log_each_iteration(self, it, loss, inp, out):
+        self.it = it
+        if it % self.log_freq == 0:
+            self.log_losses(loss)
+            self.save_reconstruction_video(out)
 
     def log_iter_hourglass(self, it, names, values, inp, out):
         self.it = it

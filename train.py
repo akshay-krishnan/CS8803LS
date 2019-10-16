@@ -75,7 +75,7 @@ class DiscriminatorFullModel(torch.nn.Module):
         return loss
 
 
-def train(config, generator, discriminator, kp_detector, checkpoint, log_dir, dataset, device_ids):
+def train(config, generator, kp_detector, discriminator, checkpoint, log_dir, dataset, device_ids):
     train_params = config['train_params']
 
     optimizer_generator = torch.optim.Adam(generator.parameters(), lr=train_params['lr'], betas=(0.5, 0.999))

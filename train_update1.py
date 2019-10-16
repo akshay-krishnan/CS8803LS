@@ -18,14 +18,14 @@ class GeneratorFullModel(torch.nn.Module):
 
     def forward(self, x):
         content_embedding = self.content_encoder(x['image'])
-        print("content embedding", content_embedding[-1].shape)
+        # print("content embedding", content_embedding[-1].shape)
         motion_embedding = self.motion_encoder(x['video'])
-        print("motion embedding", motion_embedding[-1].shape)
+        # print("motion embedding", motion_embedding[-1].shape)
         generated_embedding, h = self.sequence_model(motion_embedding[-1])
-        print("generated embedding", generated_embedding.shape, type(generated_embedding))
+        # print("generated embedding", generated_embedding.shape, type(generated_embedding))
         generated_video = self.decoder(content_embedding[-1], generated_embedding)
-        print("generated video ", generated_video.shape)
-        print("original video size", x['video'].shape)
+        # print("generated video ", generated_video.shape)
+        # print("original video size", x['video'].shape)
         losses = video_reconstruction_loss(x['video'], generated_video)
         return losses, generated_video
 
@@ -76,8 +76,6 @@ def train(config, content_encoder, motion_encoder, sequence_model, decoder, chec
                 optimizer_sequence.zero_grad()
                 optimizer_decoder.step()
                 optimizer_decoder.zero_grad()
-
-                # generator_loss_values = [val.detach().cpu().numpy() for val in loss]
 
                 logger.log_each_iteration(it, loss, inp=x, out=generated)
                 it += 1

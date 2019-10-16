@@ -13,8 +13,10 @@ from frames_dataset import FramesDataset
 from modules.generator import MotionTransferGenerator
 from modules.discriminator import Discriminator
 from modules.keypoint_detector import KPDetector
+from modules.content_encoder import ContentEncoder
+from modules.motion_encoder import Encoder
 
-from train import train
+from train import  train
 from reconstruction import reconstruction
 from transfer import transfer
 from prediction import prediction
@@ -33,49 +35,44 @@ if __name__ == "__main__":
     opt = parser.parse_args()
     with open(opt.config) as f:
         config = yaml.load(f)
-        blocks_discriminator = config['model_params']['discriminator_params']['num_blocks']
-        assert len(config['train_params']['loss_weights']['reconstruction']) == blocks_discriminator + 1
 
     if opt.checkpoint is not None:
         log_dir = os.path.join(*os.path.split(opt.checkpoint)[:-1])
     else:
         log_dir = os.path.join(opt.log_dir, os.path.basename(opt.config).split('.')[0])
-        log_dir += ' ' + strftime("%d-%m-%y %H:%M:%S", gmtime())
+        log_dir += ' video_gen ' + strftime("%d-%m-%y %H:%M:%S", gmtime())
 
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
     if not os.path.exists(os.path.join(log_dir, os.path.basename(opt.config))):
         copy(opt.config, log_dir)
 
-    generator = MotionTransferGenerator(**config['model_params']['generator_params'],
+    content_encoder = ContentEncoder(**config['model_params']['content_encoder_params'],
                                         **config['model_params']['common_params'])
-    generator.to(opt.device_ids[0])
+    content_encoder.to(opt.device_ids[0])
     if opt.verbose:
-        print(generator)
+        print("Content encoder architecture \n", content_encoder)
 
-    discriminator = Discriminator(**config['model_params']['discriminator_params'],
+    motion_encoder = Encoder(**config['model_params']['motion_encoder_params'],
                                   **config['model_params']['common_params'])
-    discriminator.to(opt.device_ids[0])
+    motion_encoder.to(opt.device_ids[0])
     if opt.verbose:
-        print(discriminator)
-
-    kp_detector = KPDetector(**config['model_params']['kp_detector_params'],
-                             **config['model_params']['common_params'])
-    kp_detector.to(opt.device_ids[0])
-    if opt.verbose:
-        print(kp_detector)
+        print("Motion encoder architecture, \n", motion_encoder)
 
     dataset = FramesDataset(is_train=(opt.mode == 'train'), **config['dataset_params'])
 
+    sequence_model = Encoder
+    # to be changed
+
     if opt.mode == 'train':
         print("Training...")
-        train(config, generator, discriminator, kp_detector, opt.checkpoint, log_dir, dataset, opt.device_ids)
-    elif opt.mode == 'reconstruction':
-        print("Reconstruction...")
-        reconstruction(config, generator, kp_detector, opt.checkpoint, log_dir, dataset)
-    elif opt.mode == 'transfer':
-        print("Transfer...")
-        transfer(config, generator, kp_detector, opt.checkpoint, log_dir, dataset)
+        train(config, content_encoder, motion_encoder, sequence_model, opt.checkpoint, log_dir, dataset, opt.device_ids)
+    # elif opt.mode == 'reconstruction':
+    #     print("Reconstruction...")
+    #     reconstruction(config, content_encoder, motion_encoder, sequence_model, opt.checkpoint, log_dir, dataset)
+    # elif opt.mode == 'transfer':
+    #     print("Transfer...")
+    #     transfer(config, generator, kp_detector, opt.checkpoint, log_dir, dataset)
     elif opt.mode == "prediction":
         print("Prediction...")
-        prediction(config, generator, kp_detector, opt.checkpoint, log_dir)
+        prediction(config, content_encoder, motion_encoder, sequence_model, opt.checkpoint, log_dir)
