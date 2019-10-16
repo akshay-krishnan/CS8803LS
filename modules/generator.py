@@ -17,9 +17,7 @@ class MotionEmbeddingDecoder(nn.Module):
         self.out_features = out_features
         self.linear = nn.Linear(in_features, 2*in_features)
         self.mlp = nn.Sequential(
-                  nn.Linear(in_features*8, 4*in_features),
-                  nn.Sigmoid(),
-                  nn.Linear(4*in_features,out_features*2),
+                  nn.Linear(in_features*8,out_features*2),
                   nn.Sigmoid(),
                   nn.Linear(out_features*2,out_features),
                   nn.Sigmoid(),
@@ -41,9 +39,7 @@ class MotionEmbeddingEncoder(nn.Module):
         self.out_features = out_features
         self.linear = nn.Linear(in_features, 2*in_features)
         self.mlp = nn.Sequential(
-                  nn.Linear(in_features*8, 4*in_features),
-                  nn.Sigmoid(),
-                  nn.Linear(4*in_features,out_features*2),
+                  nn.Linear(in_features*8, out_features*2),
                   nn.Sigmoid(),
                   nn.Linear(out_features*2,out_features),
                   nn.Sigmoid(),

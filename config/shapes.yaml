@@ -71,7 +71,7 @@ train_params:
 train_motion_embedding_params:
   num_epochs: 8
   epoch_milestones: [4]
-  lr: 2.0e-4
+  lr: 1.0e-3
   batch_size: 16
   loss_weights:
     reconstruction: []

@@ -107,7 +107,7 @@ def train_motion_embedding(config, generator, motion_generator, kp_detector, che
 
     scheduler_generator = MultiStepLR(optimizer_generator, train_params['epoch_milestones'], gamma=0.1,
                                       last_epoch=start_epoch - 1)
-    dataloader = DataLoader(valid_dataset, batch_size=8, shuffle=True, num_workers=4)
+    dataloader = DataLoader(valid_dataset, batch_size=train_params['batch_size'], shuffle=True, num_workers=4)
     valid_dataloader = DataLoader(valid_dataset, batch_size=1, shuffle=False, num_workers=1)
 
     loss_list = []
@@ -120,8 +120,9 @@ def train_motion_embedding(config, generator, motion_generator, kp_detector, che
     cat_dict = lambda l, dim: {k: torch.cat([v[k] for v in l], dim=dim) for k in l[0]}
 
     with Logger(log_dir=log_dir, visualizer_params=config['visualizer_params'], **train_params['log_params']) as logger:
-        valid_motion_embedding(config, valid_dataloader, motion_generator, kp_detector, log_dir)
+        #valid_motion_embedding(config, valid_dataloader, motion_generator, kp_detector, log_dir)
         for epoch in range(start_epoch, train_params['num_epochs']):
+            print("Epoch {}".format(epoch))
             motion_generator.train()
             for it, x in tqdm(enumerate(dataloader)):
 
