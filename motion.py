@@ -11,7 +11,7 @@ from sync_batchnorm import DataParallelWithCallback
 from modules.losses import motion_embedding_reconstruction_loss, generator_loss_names
 from skimage.draw import circle
 import matplotlib.pyplot as plt
-
+import torch.nn.functional as F
 
 
 # def generate(generator, appearance_image, kp_appearance, kp_video):
@@ -69,12 +69,16 @@ def valid_motion_embedding(config, dataloader, motion_generator, kp_detector, lo
             colormap = plt.get_cmap('gist_rainbow')
             motionembed_video = original_video * 0
             motion_embed = np.insert(motion_embed[0,:,:].cpu().numpy(), 0, [0,0], axis=0)
+            _w,_h = motionembed_video.shape[1:3]
             for fr_ind, kp in enumerate(motion_embed):
-                rr, cc = circle(kp[1], kp[0], 2, shape=motionembed_video.shape[1:3])
+                rr, cc = circle(kp[1]*_w, kp[0]*_h, 2, shape=motionembed_video.shape[1:3])
                 motionembed_video[fr_ind][rr, cc] = np.array(colormap(fr_ind / len(motion_embed)))[:3]*255
             image_name = x['name'][0] + '_motionembed.gif'
             imageio.mimsave(os.path.join(log_dir, image_name), motionembed_video)
-            import ipdb; ipdb.set_trace()
+            if it == 10:
+                break
+            #import ipdb; ipdb.set_trace()
+
 
 
 def train_motion_embedding(config, generator, motion_generator, kp_detector, checkpoint, log_dir, dataset, valid_dataset, device_ids):
@@ -104,7 +108,7 @@ def train_motion_embedding(config, generator, motion_generator, kp_detector, che
     scheduler_generator = MultiStepLR(optimizer_generator, train_params['epoch_milestones'], gamma=0.1,
                                       last_epoch=start_epoch - 1)
     dataloader = DataLoader(valid_dataset, batch_size=8, shuffle=True, num_workers=4)
-    valid_dataloader = DataLoader(valid_dataset, batch_size=1, shuffle=False, num_workers=4)
+    valid_dataloader = DataLoader(valid_dataset, batch_size=1, shuffle=False, num_workers=1)
 
     loss_list = []
     motion_generator_full = MotionGeneratorFullModel(motion_generator, train_params)
@@ -137,7 +141,7 @@ def train_motion_embedding(config, generator, motion_generator, kp_detector, che
                     kp_video = cat_dict([kp_detector(x['video'][:, :, i:(i + 1)]) for i in range(d)], dim=1)
 
 
-                loss = motion_generator_full_par(d, kp_video, x['video'])
+                loss = motion_generator_full_par(d, kp_video)
 
                 loss.backward()
                 optimizer_generator.step()
