@@ -9,6 +9,8 @@ import imageio
 from torch.optim.lr_scheduler import MultiStepLR
 from sync_batchnorm import DataParallelWithCallback
 from modules.losses import motion_embedding_reconstruction_loss, generator_loss_names
+from skimage.draw import circle
+import matplotlib.pyplot as plt
 
 
 
@@ -48,7 +50,7 @@ class MotionGeneratorFullModel(torch.nn.Module):
         loss = F.mse_loss(target.view(bz*(frame-1),-1), kp_prediction.view(bz*(frame-1),-1))
         return loss
 
-def valid_motion_embedding(dataloader, motion_generator, kp_detector):
+def valid_motion_embedding(config, dataloader, motion_generator, kp_detector, log_dir):
     motion_generator.eval()
     print("Validation...")
     cat_dict = lambda l, dim: {k: torch.cat([v[k] for v in l], dim=dim) for k in l[0]}
@@ -60,6 +62,18 @@ def valid_motion_embedding(dataloader, motion_generator, kp_detector):
             kp_video = cat_dict([kp_detector(x['video'][:, :, i:(i + 1)]) for i in range(d)], dim=1)
 
             motion_embed = motion_generator(d, kp_video, mode=1)
+            original_video = (x['video'][0,:,:,:,:].cpu().numpy().transpose(1,2,3,0)*255).astype(np.uint8)
+            image_name = x['name'][0] + '.gif'
+            imageio.mimsave(os.path.join(log_dir, image_name), original_video)
+
+            colormap = plt.get_cmap('gist_rainbow')
+            motionembed_video = original_video * 0
+            motion_embed = np.insert(motion_embed[0,:,:].cpu().numpy(), 0, [0,0], axis=0)
+            for fr_ind, kp in enumerate(motion_embed):
+                rr, cc = circle(kp[1], kp[0], 2, shape=motionembed_video.shape[1:3])
+                motionembed_video[fr_ind][rr, cc] = np.array(colormap(fr_ind / len(motion_embed)))[:3]*255
+            image_name = x['name'][0] + '_motionembed.gif'
+            imageio.mimsave(os.path.join(log_dir, image_name), motionembed_video)
             import ipdb; ipdb.set_trace()
 
 
@@ -102,7 +116,7 @@ def train_motion_embedding(config, generator, motion_generator, kp_detector, che
     cat_dict = lambda l, dim: {k: torch.cat([v[k] for v in l], dim=dim) for k in l[0]}
 
     with Logger(log_dir=log_dir, visualizer_params=config['visualizer_params'], **train_params['log_params']) as logger:
-        valid_motion_embedding(valid_dataloader, motion_generator, kp_detector)
+        valid_motion_embedding(config, valid_dataloader, motion_generator, kp_detector, log_dir)
         for epoch in range(start_epoch, train_params['num_epochs']):
             motion_generator.train()
             for it, x in tqdm(enumerate(dataloader)):
@@ -134,7 +148,7 @@ def train_motion_embedding(config, generator, motion_generator, kp_detector, che
                                 names=generator_loss_names(train_params['loss_weights']),
                                 values=generator_loss_values, inp=x)
 
-            valid_motion_embedding(valid_dataloader, motion_generator, kp_detector)
+            valid_motion_embedding(config, valid_dataloader, motion_generator, kp_detector, log_dir)
 
             scheduler_generator.step()
             logger.log_epoch(epoch, {'generator': generator,
