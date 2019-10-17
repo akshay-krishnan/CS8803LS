@@ -46,8 +46,12 @@ class MotionGeneratorFullModel(torch.nn.Module):
         target = torch.cat([kp_video['mean'].view(bz,frame,-1)[:,1:,:],
                             kp_video['var'].view(bz,frame,-1)[:,1:,:]
                             ], -1)
-        kp_prediction = self.generator(d, kp_video)
-        loss = F.mse_loss(target.view(bz*(frame-1),-1), kp_prediction.view(bz*(frame-1),-1))
+        if self.train_params['adversarial']:
+            kp_prediction,kp_prediction_adv = self.generator(d, kp_video, mode=2)
+            loss = F.mse_loss(target.view(bz*(frame-1),-1), kp_prediction.view(bz*(frame-1),-1)) + F.mse_loss(target.view(bz*(frame-1),-1), kp_prediction_adv.view(bz*(frame-1),-1))
+        else:
+            kp_prediction = self.generator(d, kp_video, mode=0)
+            loss = F.mse_loss(target.view(bz*(frame-1),-1), kp_prediction.view(bz*(frame-1),-1))
         return loss
 
 def valid_motion_embedding(config, dataloader, motion_generator, kp_detector, log_dir):

@@ -6,6 +6,17 @@ from modules.util import Encoder, Decoder, ResBlock3D
 from modules.dense_motion_module import DenseMotionModule, IdentityDeformation
 from modules.movement_embedding import MovementEmbeddingModule
 
+class ReverseGrad(torch.autograd.Function):
+        @staticmethod
+        def forward(ctx, x):
+            return x.view_as(x)
+
+        @staticmethod
+        def backward(ctx, grad_output):
+            return grad_output.neg()
+def reverse_grad(x):
+    func = ReverseGrad.apply
+    return func(x)
 
 class MotionEmbeddingDecoder(nn.Module):
     """
@@ -138,6 +149,7 @@ class MotionEmbeddingGenerator(nn.Module):
 
         self.motion_encoder = MotionEmbeddingEncoder(in_features=num_kp*12, out_features=embedsize)
         self.motion_decoder = MotionEmbeddingDecoder(in_features=embedsize + num_kp*6, out_features=num_kp*6)
+        self.motion_advdecoder = MotionEmbeddingDecoder(in_features=embedsize, out_features=num_kp*6)
         self.num_kp = num_kp
         def init_weights(m):
             if type(m) == nn.Linear:
@@ -173,3 +185,12 @@ class MotionEmbeddingGenerator(nn.Module):
             return kp_prediction
         if mode == 1:
             return motion_embed
+        if mode == 2:
+            decode_in = torch.cat([kp_video['mean'].view(bz,frame,-1)[:,:-1,:],
+                                   kp_video['var'].view(bz,frame,-1)[:,:-1,:],
+                                   motion_embed
+                                    ], -1)
+            kp_prediction = self.motion_decoder(decode_in)
+            kp_prediction_adv = self.motion_advdecoder(reverse_grad(motion_embed))
+            # video_prediction: [bz, ch, #frames, H, W]
+            return kp_prediction,kp_prediction_adv

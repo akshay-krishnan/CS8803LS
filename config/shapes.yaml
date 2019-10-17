@@ -73,6 +73,7 @@ train_motion_embedding_params:
   epoch_milestones: [4]
   lr: 1.0e-3
   batch_size: 16
+  adversarial: False
   loss_weights:
     reconstruction: []
     reconstruction_deformed: 0
