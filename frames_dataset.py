@@ -42,9 +42,7 @@ def read_video(name, image_shape):
 
 class FramesDataset(Dataset):
     """Dataset of videos, videos can be represented as an image of concatenated frames, or in '.mp4','.gif' format"""
-
-    def __init__(self, root_dir, augmentation_params, image_shape=(64, 64, 3), is_train=True,
-                 random_seed=0, pairs_list=None, transform=None):
+    def __init__(self, root_dir, augmentation_params, image_shape=(64, 64, 3), is_train=True, random_seed=0, pairs_list=None, transform=None):
         self.root_dir = root_dir
         self.images = os.listdir(root_dir)
         self.image_shape = tuple(image_shape)

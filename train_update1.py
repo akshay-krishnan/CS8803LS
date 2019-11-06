@@ -8,15 +8,18 @@ from sync_batchnorm import DataParallelWithCallback
 
 class GeneratorFullModel(torch.nn.Module):
 
-    def __init__(self, content_encoder, motion_encoder, sequence_model, decoder, train_params):
+    def __init__(self, content_encoder, motion_encoder, sequence_model, decoder, train_params,
+                 is_video_test_split=False):
         super(GeneratorFullModel, self).__init__()
         self.content_encoder = content_encoder
         self.motion_encoder = motion_encoder
         self.sequence_model = sequence_model
         self.decoder = decoder
         self.train_params = train_params
+        self.is_video_test_split = is_video_test_split
 
     def forward(self, x):
+
         content_embedding = self.content_encoder(x['image'])
         # print("content embedding", content_embedding[-1].shape)
         motion_embedding = self.motion_encoder(x['video'])
@@ -26,11 +29,14 @@ class GeneratorFullModel(torch.nn.Module):
         generated_video = self.decoder(content_embedding[-1], generated_embedding)
         # print("generated video ", generated_video.shape)
         # print("original video size", x['video'].shape)
-        losses = video_reconstruction_loss(x['video'], generated_video)
+        if self.is_video_test_split:
+            losses = video_reconstruction_loss(x['test'], generated_video)
+        else:
+            losses = video_reconstruction_loss(x['video'], generated_video)
         return losses, generated_video
 
 
-def train(config, content_encoder, motion_encoder, sequence_model, decoder, checkpoint, log_dir, dataset, device_ids):
+def train(config, content_encoder, motion_encoder, sequence_model, decoder, checkpoint, log_dir, dataset, device_ids, is_video_test_split=False):
     train_params = config['train_params']
 
     optimizer_content = torch.optim.Adam(content_encoder.parameters(), lr=train_params['lr'], betas=(0.5, 0.999))
@@ -57,7 +63,8 @@ def train(config, content_encoder, motion_encoder, sequence_model, decoder, chec
 
     dataloader = DataLoader(dataset, batch_size=train_params['batch_size'], shuffle=True, num_workers=4, drop_last=True)
 
-    generator_full = GeneratorFullModel(content_encoder, motion_encoder, sequence_model, decoder, train_params)
+    generator_full = GeneratorFullModel(content_encoder, motion_encoder, sequence_model, decoder, train_params,
+                                        is_video_test_split=is_video_test_split)
     generator_full_par = DataParallelWithCallback(generator_full, device_ids=device_ids)
 
     with Logger(log_dir=log_dir, visualizer_params=config['visualizer_params'], **train_params['log_params']) as logger:

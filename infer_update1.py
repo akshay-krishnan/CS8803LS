@@ -6,13 +6,15 @@ from sync_batchnorm import DataParallelWithCallback
 
 class GeneratorFullModel(torch.nn.Module):
 
-    def __init__(self, content_encoder, motion_encoder, sequence_model, decoder, infer_params):
+    def __init__(self, content_encoder, motion_encoder, sequence_model, decoder, infer_params,
+                 is_video_test_split=False):
         super(GeneratorFullModel, self).__init__()
         self.content_encoder = content_encoder
         self.motion_encoder = motion_encoder
         self.sequence_model = sequence_model
         self.decoder = decoder
         self.infer_params = infer_params
+        self.is_video_test_split = is_video_test_split
 
     def forward(self, x):
         content_embedding = self.content_encoder(x['image'])
@@ -24,7 +26,10 @@ class GeneratorFullModel(torch.nn.Module):
         generated_video = self.decoder(content_embedding[-1], generated_embedding)
         # print("generated video ", generated_video.shape)
         # print("original video size", x['video'].shape)
-        losses = video_reconstruction_loss(x['video'], generated_video)
+        if self.is_video_test_split:
+            losses = video_reconstruction_loss(x['test'], generated_video)
+        else:
+            losses = video_reconstruction_loss(x['video'], generated_video)
         return losses, generated_video
 
 
