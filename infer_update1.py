@@ -33,7 +33,7 @@ class GeneratorFullModel(torch.nn.Module):
         return losses, generated_video
 
 
-def infer(config, content_encoder, motion_encoder, sequence_model, decoder, checkpoint, log_dir, dataset, device_ids):
+def infer(config, content_encoder, motion_encoder, sequence_model, decoder, checkpoint, log_dir, dataset, device_ids, is_video_test_split=False):
 
     infer_params = config['infer_params']
 
@@ -46,7 +46,8 @@ def infer(config, content_encoder, motion_encoder, sequence_model, decoder, chec
 
     dataloader = DataLoader(dataset, batch_size=infer_params['batch_size'], shuffle=True, num_workers=4, drop_last=True)
 
-    generator_full = GeneratorFullModel(content_encoder, motion_encoder, sequence_model, decoder, infer_params)
+    generator_full = GeneratorFullModel(content_encoder, motion_encoder, sequence_model, decoder, infer_params,
+                                        is_video_test_split=is_video_test_split)
     generator_full_par = DataParallelWithCallback(generator_full, device_ids=device_ids)
     total_loss = 0
 

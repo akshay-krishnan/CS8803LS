@@ -66,7 +66,7 @@ train_params:
   detach_kp_generator: False #Do not update keypoints with generator loss
   detach_kp_discriminator: True #Do not update keypoints with discriminator loss
   num_epochs: 4500
-  epoch_milestones: [3000] #Drop lr in this epochs
+  epoch_milestones: [1500] #Drop lr in this epochs
   lr: 2.0e-4
   batch_size: 4
   loss_weights:

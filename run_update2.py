@@ -86,4 +86,4 @@ if __name__ == "__main__":
     elif opt.mode == "infer":
         print("Inference...")
         infer(config, content_encoder, motion_encoder, sequence_model, decoder,
-              opt.checkpoint, log_dir, dataset, opt.device_ids)
+              opt.checkpoint, log_dir, dataset, opt.device_ids, is_video_test_split=True)
