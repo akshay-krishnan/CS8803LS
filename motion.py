@@ -39,7 +39,7 @@ class MotionGeneratorFullModel(torch.nn.Module):
         self.generator = generator
         self.train_params = train_params
 
-    def forward(self, d, kp_video):
+    def forward(self, d, kp_video, epoch, last_it):
 
         # video_prediction: [bz, #frames, #kp*6]
         bz,frame,kp,_ = kp_video['mean'].shape
@@ -47,10 +47,10 @@ class MotionGeneratorFullModel(torch.nn.Module):
                             kp_video['var'].view(bz,frame,-1)[:,1:,:]
                             ], -1)
         if self.train_params['adversarial']:
-            kp_prediction,kp_prediction_adv = self.generator(d, kp_video, mode=2)
+            kp_prediction,kp_prediction_adv = self.generator(d, kp_video, epoch, last_it, mode=2)
             loss = F.mse_loss(target.view(bz*(frame-1),-1), kp_prediction.view(bz*(frame-1),-1)) + F.mse_loss(target.view(bz*(frame-1),-1), kp_prediction_adv.view(bz*(frame-1),-1))
         else:
-            kp_prediction = self.generator(d, kp_video, mode=0)
+            kp_prediction = self.generator(d, kp_video, epoch, last_it, mode=0)
             loss = F.mse_loss(target.view(bz*(frame-1),-1), kp_prediction.view(bz*(frame-1),-1))
         return loss
 
@@ -146,7 +146,8 @@ def train_motion_embedding(config, generator, motion_generator, kp_detector, che
                     kp_video = cat_dict([kp_detector(x['video'][:, :, i:(i + 1)]) for i in range(d)], dim=1)
 
 
-                loss = motion_generator_full_par(d, kp_video)
+                loss = motion_generator_full_par(d, kp_video, \
+                    epoch, it==len(dataloader)-1)
 
                 loss.backward()
                 optimizer_generator.step()

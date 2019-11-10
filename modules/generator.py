@@ -2,6 +2,10 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+
 from modules.util import Encoder, Decoder, ResBlock3D
 from modules.dense_motion_module import DenseMotionModule, IdentityDeformation
 from modules.movement_embedding import MovementEmbeddingModule
@@ -158,7 +162,7 @@ class MotionEmbeddingGenerator(nn.Module):
         self.motion_encoder.apply(init_weights)
         self.motion_decoder.apply(init_weights)
 
-    def forward(self, d, kp_video, mode=0):
+    def forward(self, d, kp_video, epoch=0, last_it=False, mode=0):
         # mode = 0 (video_prediction)
         # mode = 1 (motion_embed)
         bz,frame,kp,_ = kp_video['mean'].shape
@@ -174,6 +178,9 @@ class MotionEmbeddingGenerator(nn.Module):
 
         # motion_embed: [bz, #frame, 2]
         motion_embed = self.motion_encoder(encode_in)
+        
+        if last_it:
+            self.visualize_embedding(kp_video['mean'], motion_embed, epoch)
 
         if mode == 0:
             decode_in = torch.cat([kp_video['mean'].view(bz,frame,-1)[:,:-1,:],
@@ -194,3 +201,44 @@ class MotionEmbeddingGenerator(nn.Module):
             kp_prediction_adv = self.motion_advdecoder(reverse_grad(motion_embed))
             # video_prediction: [bz, ch, #frames, H, W]
             return kp_prediction,kp_prediction_adv
+
+    def scale_to_rgb(self, arr):
+
+        assert len(arr.shape) == 4
+        assert arr.shape[-1] == 2
+        bz, frame, kp, h_dim = arr.shape
+
+        mapped_arr = torch.mean(arr, dim=2)
+        high, low = torch.max(mapped_arr.view(bz * frame, -1), dim=0)[0], torch.min(mapped_arr.view(bz * frame, -1), dim=0)[0]
+        mapped_arr = (mapped_arr - low)/(high - low)*(1.0 - 0)
+        mapped_arr = torch.cat((mapped_arr, torch.zeros(bz, frame, 1, device="cuda")), 2)
+
+        return mapped_arr
+
+    def visualize_embedding(self, kp_mean, motion_embed, epoch):
+        
+        if not os.path.exists("log/training_vis/" + str(epoch)):
+            os.makedirs("log/training_vis/" + str(epoch))
+
+        kp_color = self.scale_to_rgb(kp_mean).data.cpu().numpy()
+        motion_embed_diff = (motion_embed - torch.roll(motion_embed, 1, 1))[:, 1:, :].data.cpu().numpy()
+        bz, frame, _ = motion_embed_diff.shape
+
+        # kp_color: [bz, #frame, 3]
+        # motion_embed_diff: [bz, #frame - 1, 2]
+
+        for v in range(bz):
+            
+            xs, ys, colors = [], [], []
+            
+            for f in range(frame):
+                xs.append(motion_embed_diff[v, f, 0])
+                ys.append(motion_embed_diff[v, f, 1])
+                colors.append(kp_color[v, f, :])
+
+            plt.scatter(xs, ys, c=np.array(colors), alpha=0.5)
+            plt.title('visualize motion embedding vector')
+            plt.xlabel('x')
+            plt.ylabel('y')
+            plt.savefig("log/training_vis/" + str(epoch) + "/" + str(v) + ".png")
+            plt.close()
