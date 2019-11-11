@@ -50,7 +50,7 @@ if __name__ == "__main__":
         try:
             os.mkdir(os.path.join(log_dir, 'neighbours', mapping[i]))
             for j in range(0, len(neigh[i])):
-                    copyfile(os.path.join(config['dataset_params']['root_dir'], 'all', mapping[i]+".jpg"),
+                    copyfile(os.path.join(config['dataset_params']['root_dir'], 'all', mapping[neigh[i][j]]+".jpg"),
                              os.path.join(log_dir, 'neighbours', mapping[i], mapping[neigh[i][j]]+".jpg"))
         except FileExistsError:
             pass
