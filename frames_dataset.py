@@ -42,7 +42,8 @@ def read_video(name, image_shape):
 
 class FramesDataset(Dataset):
     """Dataset of videos, videos can be represented as an image of concatenated frames, or in '.mp4','.gif' format"""
-    def __init__(self, root_dir, augmentation_params, image_shape=(64, 64, 3), is_train=True, random_seed=0, pairs_list=None, transform=None):
+    def __init__(self, root_dir, augmentation_params, image_shape=(64, 64, 3), is_train=True,
+                 random_seed=0, pairs_list=None, transform=None, is_knn=False):
         self.root_dir = root_dir
         self.images = os.listdir(root_dir)
         self.image_shape = tuple(image_shape)
@@ -53,13 +54,16 @@ class FramesDataset(Dataset):
             print("Use predefined train-test split.")
             train_images = os.listdir(os.path.join(root_dir, 'train'))
             test_images = os.listdir(os.path.join(root_dir, 'test'))
+            self.root_dir_train = os.path.join(self.root_dir, 'train')
             self.root_dir = os.path.join(self.root_dir, 'train' if is_train else 'test')
         else:
             print("Use random train-test split.")
             train_images, test_images = train_test_split(self.images, random_state=random_seed, test_size=0.2)
-
+        all_images = train_images + test_images
         if is_train:
             self.images = train_images
+        elif is_knn:
+            self.images = all_images
         else:
             self.images = test_images
 
@@ -75,8 +79,12 @@ class FramesDataset(Dataset):
         return len(self.images)
 
     def __getitem__(self, idx):
-        img_name = os.path.join(self.root_dir, self.images[idx])
-        video_array = read_video(img_name, image_shape=self.image_shape)
+        try:
+            img_name = os.path.join(self.root_dir, self.images[idx])
+            video_array = read_video(img_name, image_shape=self.image_shape)
+        except FileNotFoundError:
+            img_name = os.path.join(self.root_dir_train, self.images[idx])
+            video_array = read_video(img_name, image_shape=self.image_shape)
         out = self.transform(video_array)
         # add names
         out['name'] = os.path.basename(img_name)

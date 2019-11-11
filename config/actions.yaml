@@ -84,6 +84,12 @@ infer_params:
     log_freq_iter: 1 # Log progress this number of iterations
     cpk_freq_epoch: 5000 # Save checkpoint this number of epochs
 
+analysis_params:
+  batch_size: 1
+  log_params:
+    log_freq_iter: 1 # Log progress this number of iterations
+    cpk_freq_epoch: 5000 # Save checkpoint this number of epochs
+
 reconstruction_params: #Parameters for reconstruction task
   num_videos: null #Number of videos to use in reconstruction, null for all avaliable
   format: '.gif' #Number for saving videos '.gif' or '.mp4', the final results will be also saved in loosless '.png'

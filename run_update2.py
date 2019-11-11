@@ -24,7 +24,7 @@ from infer_update1 import infer
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--config", required=True, help="path to config")
-    parser.add_argument("--mode", default="train", choices=["train", "reconstruction", "transfer", "infer"])
+    parser.add_argument("--mode", default="train", choices=["train", "reconstruction", "knn", "infer"])
     parser.add_argument("--log_dir", default='log', help="path to log into")
     parser.add_argument("--checkpoint", default=None, help="path to checkpoint to restore")
     parser.add_argument("--device_ids", default="0", type=lambda x: list(map(int, x.split(','))),
@@ -37,7 +37,8 @@ if __name__ == "__main__":
         config = yaml.load(f)
 
     dataset = FramesDataset(is_train=(opt.mode == 'train'), **config['dataset_params'],
-                            transform=ContentMotionTestTransform(**config['dataset_params']['augmentation_params']))
+                            transform=ContentMotionTestTransform(**config['dataset_params']['augmentation_params']),
+                            is_knn=(opt.mode == 'knn'))
 
 
     if opt.checkpoint is not None:
@@ -87,3 +88,8 @@ if __name__ == "__main__":
         print("Inference...")
         infer(config, content_encoder, motion_encoder, sequence_model, decoder,
               opt.checkpoint, log_dir, dataset, opt.device_ids, is_video_test_split=True)
+    elif opt.mode == "knn":
+        print("Analysis...")
+        infer(config, content_encoder, motion_encoder, sequence_model, decoder,
+              opt.checkpoint, log_dir, dataset, opt.device_ids, is_video_test_split=True,
+              is_analysis=True)

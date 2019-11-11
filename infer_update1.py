@@ -3,11 +3,12 @@ from torch.utils.data import DataLoader
 from logger import Logger
 from modules.losses import video_reconstruction_loss
 from sync_batchnorm import DataParallelWithCallback
+import os
 
 class GeneratorFullModel(torch.nn.Module):
 
     def __init__(self, content_encoder, motion_encoder, sequence_model, decoder, infer_params,
-                 is_video_test_split=False):
+                 is_video_test_split=False, log_dir=None, is_analysis=False):
         super(GeneratorFullModel, self).__init__()
         self.content_encoder = content_encoder
         self.motion_encoder = motion_encoder
@@ -15,11 +16,22 @@ class GeneratorFullModel(torch.nn.Module):
         self.decoder = decoder
         self.infer_params = infer_params
         self.is_video_test_split = is_video_test_split
+        self.is_analysis = is_analysis
+        self.log_dir = os.path.join(log_dir, 'embeddings')
+        if is_analysis and not os.path.exists(self.log_dir):
+            os.mkdir(self.log_dir)
+        self.debug_names = []
 
     def forward(self, x):
         content_embedding = self.content_encoder(x['image'])
         # print("content embedding", content_embedding[-1].shape)
         motion_embedding = self.motion_encoder(x['video'])
+        if(self.is_analysis and self.log_dir):
+            if x['name'][0] in self.debug_names:
+                print("previously done")
+            else:
+                self.debug_names.append(x['name'][0])
+            torch.save(motion_embedding[-1], os.path.join(self.log_dir, (x['name'][0]).split('.')[0]+'.pt'))
         # print("motion embedding", motion_embedding[-1].shape)
         generated_embedding, h = self.sequence_model(motion_embedding[-1])
         # print("generated embedding", generated_embedding.shape, type(generated_embedding))
@@ -33,7 +45,8 @@ class GeneratorFullModel(torch.nn.Module):
         return losses, generated_video
 
 
-def infer(config, content_encoder, motion_encoder, sequence_model, decoder, checkpoint, log_dir, dataset, device_ids, is_video_test_split=False):
+def infer(config, content_encoder, motion_encoder, sequence_model, decoder, checkpoint, log_dir,
+          dataset, device_ids, is_video_test_split=False, is_analysis=False):
 
     infer_params = config['infer_params']
 
@@ -44,10 +57,15 @@ def infer(config, content_encoder, motion_encoder, sequence_model, decoder, chec
         print("no checkpoint provided")
         return None
 
-    dataloader = DataLoader(dataset, batch_size=infer_params['batch_size'], shuffle=True, num_workers=4, drop_last=True)
+    if is_analysis:
+        batch_size = config['analysis_params']['batch_size']
+    else:
+        batch_size = infer_params['batch_size']
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4, drop_last=True)
 
     generator_full = GeneratorFullModel(content_encoder, motion_encoder, sequence_model, decoder, infer_params,
-                                        is_video_test_split=is_video_test_split)
+                                        is_video_test_split=is_video_test_split, is_analysis=is_analysis,
+                                        log_dir=log_dir)
     generator_full_par = DataParallelWithCallback(generator_full, device_ids=device_ids)
     total_loss = 0
 
@@ -59,11 +77,10 @@ def infer(config, content_encoder, motion_encoder, sequence_model, decoder, chec
                 loss = out[-2]
                 generated = out[-1]
                 total_loss += loss
-                logger.log_each_iteration(it, loss, x, generated)
+                if not is_analysis:
+                    logger.log_each_iteration(it, loss, x, generated)
                 it += 1
                 print("iter : ", it, " loss: ", loss)
 
     print("reconstruction loss on test data ", total_loss/len(dataloader.dataset))
-    print("total loss ", total_loss)
-
     return

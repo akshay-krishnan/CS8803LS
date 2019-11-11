@@ -65,11 +65,9 @@ class Logger:
 
     def save_reconstruction_video(self, reconstruction):
         images = reconstruction.data.cpu().numpy()
-        print("in saving reconstruction", images.shape)
         for i in range(0, images.shape[0]):
             temp_image = images[i].transpose(1,2,3,0)
             temp_image = (255 * temp_image).astype(np.uint8)
-            print("saving video")
             imageio.mimsave(os.path.join(self.visualizations_dir, "%s-rec-%d.gif" % (str(self.it).zfill(self.zfill_num), i)),
                             temp_image)
 
