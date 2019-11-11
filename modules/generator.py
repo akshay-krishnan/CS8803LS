@@ -221,20 +221,20 @@ class MotionEmbeddingGenerator(nn.Module):
             os.makedirs("log/training_vis/" + str(epoch))
 
         kp_color = self.scale_to_rgb(kp_mean).data.cpu().numpy()
-        motion_embed_diff = (motion_embed - torch.roll(motion_embed, 1, 1))[:, 1:, :].data.cpu().numpy()
-        bz, frame, _ = motion_embed_diff.shape
+        kp_color_diff = (kp_color - torch.roll(kp_color, 1, 1))[:, 1:, :].data.cpu().numpy()
+        bz, frame, _ = kp_color_diff.shape
 
-        # kp_color: [bz, #frame, 3]
-        # motion_embed_diff: [bz, #frame - 1, 2]
+        # kp_color_diff: [bz, #frame - 1, 3]
+        # motion_embed: [bz, #frame, 2]
 
         for v in range(bz):
             
             xs, ys, colors = [], [], []
             
             for f in range(frame):
-                xs.append(motion_embed_diff[v, f, 0])
-                ys.append(motion_embed_diff[v, f, 1])
-                colors.append(kp_color[v, f, :])
+                xs.append(motion_embed[v, f, 0])
+                ys.append(motion_embed[v, f, 1])
+                colors.append(kp_color_diff[v, f + 1, :])
 
             plt.scatter(xs, ys, c=np.array(colors), alpha=0.5)
             plt.title('visualize motion embedding vector')
