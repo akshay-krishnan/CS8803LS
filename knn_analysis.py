@@ -17,6 +17,7 @@ from shutil import copyfile
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--config", required=True, help="path to config")
+    parser.add_argument("--k", default=5, help="number of neigbors")
     parser.add_argument("--log_dir", required=True, default='log', help="path to log into")
     parser.add_argument("--device_ids", default="0", type=lambda x: list(map(int, x.split(','))),
                         help="Names of the devices comma separated.")
@@ -37,7 +38,7 @@ if __name__ == "__main__":
 
     all_embeddings = np.array(all_embeddings)
     embeddings = np.reshape(all_embeddings, (all_embeddings.shape[0], -1))
-    neigh_obj = NearestNeighbors(n_neighbors=5).fit(embeddings)
+    neigh_obj = NearestNeighbors(n_neighbors=opt.k).fit(embeddings)
     distances, neigh = neigh_obj.kneighbors(embeddings)
 
     try:
@@ -53,5 +54,3 @@ if __name__ == "__main__":
                              os.path.join(log_dir, 'neighbours', mapping[i], mapping[neigh[i][j]]+".jpg"))
         except FileExistsError:
             pass
-    # print("saved to neighbors.txt")
-    # np.savetxt(log_dir+"/neighbors.txt", neigh, fmt="%d", delimiter=', ')
