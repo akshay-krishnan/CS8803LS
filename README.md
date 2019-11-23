@@ -59,6 +59,10 @@ KNN Analysis:
 python3 knn_analysis.py --config config/actions.yaml --log_dir <path_to_log_directory>
 ```
 
+Transfer: 
+```
+python3 run_update2.py --config config/actions.yaml --mode transfer --verbose --checkpoint <path_to_checkpoint>
+```
 The code will create a folder in the log directory (each run will create a time-stamped new directory).
 Checkpoints will be saved to this folder.
 To check the loss values during training in see ```log.txt```.

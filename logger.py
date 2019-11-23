@@ -63,13 +63,16 @@ class Logger:
             temp_image = (255 * temp_image).astype(np.uint8)
             imageio.imwrite(os.path.join(self.visualizations_dir, "%s-rec-%d.png" % (str(self.it).zfill(self.zfill_num), i)), temp_image)
 
-    def save_reconstruction_video(self, reconstruction):
+    def save_reconstruction_video(self, reconstruction, names=None):
         images = reconstruction.data.cpu().numpy()
         for i in range(0, images.shape[0]):
             temp_image = images[i].transpose(1,2,3,0)
             temp_image = (255 * temp_image).astype(np.uint8)
-            imageio.mimsave(os.path.join(self.visualizations_dir, "%s-rec-%d.gif" % (str(self.it).zfill(self.zfill_num), i)),
-                            temp_image)
+            if names is None:
+                name = str(self.it).zfill(self.zfill_num)+'-rec-'+str(i)+'.gif'
+            else:
+                name = names[i].split('.')[0]+'.gif'
+            imageio.mimsave(os.path.join(self.visualizations_dir, name), temp_image)
 
 
     @staticmethod
@@ -134,7 +137,7 @@ class Logger:
         self.it = it
         if it % self.log_freq == 0:
             self.log_losses(loss)
-            self.save_reconstruction_video(out)
+            self.save_reconstruction_video(out, inp['name'])
 
     def log_iter_hourglass(self, it, names, values, inp, out):
         self.it = it

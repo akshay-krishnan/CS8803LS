@@ -24,7 +24,7 @@ from infer_update1 import infer
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--config", required=True, help="path to config")
-    parser.add_argument("--mode", default="train", choices=["train", "reconstruction", "knn", "infer"])
+    parser.add_argument("--mode", default="train", choices=["train", "knn", "infer", "transfer"])
     parser.add_argument("--log_dir", default='log', help="path to log into")
     parser.add_argument("--checkpoint", default=None, help="path to checkpoint to restore")
     parser.add_argument("--device_ids", default="0", type=lambda x: list(map(int, x.split(','))),
@@ -38,8 +38,7 @@ if __name__ == "__main__":
 
     dataset = FramesDataset(is_train=(opt.mode == 'train'), **config['dataset_params'],
                             transform=ContentMotionTestTransform(**config['dataset_params']['augmentation_params']),
-                            is_knn=(opt.mode == 'knn'))
-
+                            is_knn=(opt.mode == 'knn' or opt.mode == 'transfer'))
 
     if opt.checkpoint is not None:
         log_dir = os.path.join(*os.path.split(opt.checkpoint)[:-1])
@@ -51,7 +50,6 @@ if __name__ == "__main__":
         os.makedirs(log_dir)
     if not os.path.exists(os.path.join(log_dir, os.path.basename(opt.config))):
         copy(opt.config, log_dir)
-
 
     content_encoder = ContentEncoder(**config['model_params']['content_encoder_params'])
     content_encoder.to(opt.device_ids[0])
@@ -73,17 +71,14 @@ if __name__ == "__main__":
     if opt.verbose:
         print("decoder model architecture, \n", decoder)
 
-
     if opt.mode == 'train':
         print("Training...")
         train(config, content_encoder, motion_encoder, sequence_model, decoder,
               opt.checkpoint, log_dir, dataset, opt.device_ids, is_video_test_split=True)
-    # # elif opt.mode == 'reconstruction':
-    # #     print("Reconstruction...")
-    # #     reconstruction(config, content_encoder, motion_encoder, sequence_model, opt.checkpoint, log_dir, dataset)
-    # # elif opt.mode == 'transfer':
-    # #     print("Transfer...")
-    # #     transfer(config, generator, kp_detector, opt.checkpoint, log_dir, dataset)
+    elif opt.mode == 'transfer':
+        print("Transfer...")
+        transfer(config, content_encoder, motion_encoder, sequence_model, decoder,
+              opt.checkpoint, log_dir, dataset, opt.device_ids)
     elif opt.mode == "infer":
         print("Inference...")
         infer(config, content_encoder, motion_encoder, sequence_model, decoder,

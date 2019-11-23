@@ -5,14 +5,25 @@ matplotlib.use('Agg')
 import os
 import yaml
 from argparse import ArgumentParser
-from time import gmtime, strftime
-from shutil import copy
 import torch.nn as nn
 import torch
 import numpy as np
-import scipy.spatial
 from sklearn.neighbors import NearestNeighbors
 from shutil import copyfile
+from frames_dataset import read_video
+import imageio
+
+def save_video(images, path):
+    print(images.shape)
+    temp_image = images.transpose(1, 2, 3, 0)
+    temp_image = (255 * temp_image).astype(np.uint8)
+    imageio.mimsave(path, temp_image)
+
+def save_reconstruction_video(images, path):
+    # temp_image = images[i].transpose(1,2,3,0)
+    temp_image = (255 * images).astype(np.uint8)
+    imageio.mimsave(path, temp_image)
+
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -50,7 +61,12 @@ if __name__ == "__main__":
         try:
             os.mkdir(os.path.join(log_dir, 'neighbours', mapping[i]))
             for j in range(0, len(neigh[i])):
-                    copyfile(os.path.join(config['dataset_params']['root_dir'], 'all', mapping[neigh[i][j]]+".jpg"),
-                             os.path.join(log_dir, 'neighbours', mapping[i], mapping[neigh[i][j]]+".jpg"))
+                video = read_video(os.path.join(config['dataset_params']['root_dir'], 'all', mapping[neigh[i][j]]+".jpg"),
+                           tuple(config['dataset_params']['image_shape']))
+                print(video.shape)
+                save_reconstruction_video(video, os.path.join(log_dir, 'neighbours', mapping[i], mapping[neigh[i][j]]+".gif"))
+                # copyfile(os.path.join(config['dataset_params']['root_dir'], 'all', mapping[neigh[i][j]]+".jpg"),
+                #              os.path.join(log_dir, 'neighbours', mapping[i], mapping[neigh[i][j]]+".jpg"))
         except FileExistsError:
+            print('file exists')
             pass

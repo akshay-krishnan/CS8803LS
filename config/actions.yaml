@@ -1,6 +1,6 @@
 dataset_params: #Parameters of the dataset
   root_dir: data/actions #Directory containing test and train subfolders with videos, it can be '.gif' or '.mp4' videos or stacked frames (see data/shapes)
-  pairs_list: data/actions.csv #List of pairs for transfer (see data/taichi.csv)
+  pairs_list: data/actions/pairs.csv #List of pairs for transfer (see data/taichi.csv)
   image_shape: [64, 64, 3] #Shape of individual image for stacked frames
   augmentation_params: #Parameters for train time augmentation
     flip_param:
@@ -95,13 +95,9 @@ reconstruction_params: #Parameters for reconstruction task
   format: '.gif' #Number for saving videos '.gif' or '.mp4', the final results will be also saved in loosless '.png'
 
 transfer_params: #Parameters for transfer task
-  num_pairs: 100 #Number of video pairs
-  format: '.gif' #Number for saving videos '.gif' or '.mp4', the final results will be also saved in loosless '.png'
-  normalization_params: #Parameters of transfer
-    move_location: True #Absolute or relative transfer (False - for absolute)
-    movement_mult: False #Divide movement by the scale of object
-    adapt_variance: False #Addapting the covariance matrix for relative transfer
-    clip_mean: False #Cliping the mean to be inside the image
+  batch_size: 1
+  log_params:
+    log_freq_iter: 1 # Log progress this number of iterations
 
 prediction_params: #Parameters for prediction task
   rnn_params: # Parameters of network that predict movement of keypoints

@@ -32,12 +32,8 @@ class GeneratorFullModel(torch.nn.Module):
             else:
                 self.debug_names.append(x['name'][0])
             torch.save(motion_embedding[-1], os.path.join(self.log_dir, (x['name'][0]).split('.')[0]+'.pt'))
-        # print("motion embedding", motion_embedding[-1].shape)
         generated_embedding, h = self.sequence_model(motion_embedding[-1])
-        # print("generated embedding", generated_embedding.shape, type(generated_embedding))
         generated_video = self.decoder(content_embedding[-1], generated_embedding)
-        # print("generated video ", generated_video.shape)
-        # print("original video size", x['video'].shape)
         if self.is_video_test_split:
             losses = video_reconstruction_loss(x['test'], generated_video)
         else:
