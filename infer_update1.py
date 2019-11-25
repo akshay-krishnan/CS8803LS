@@ -6,7 +6,6 @@ from sync_batchnorm import DataParallelWithCallback
 import os
 
 class GeneratorFullModel(torch.nn.Module):
-
     def __init__(self, content_encoder, motion_encoder, sequence_model, decoder, infer_params,
                  is_video_test_split=False, log_dir=None, is_analysis=False):
         super(GeneratorFullModel, self).__init__()
@@ -45,14 +44,12 @@ def infer(config, content_encoder, motion_encoder, sequence_model, decoder, chec
           dataset, device_ids, is_video_test_split=False, is_analysis=False):
 
     infer_params = config['infer_params']
-
     if checkpoint is not None:
         start_epoch, it = Logger.load_checkpoint(checkpoint, content_encoder, motion_encoder, sequence_model,
                                           decoder)
     else:
         print("no checkpoint provided")
         return None
-
     if is_analysis:
         batch_size = config['analysis_params']['batch_size']
     else:
@@ -64,7 +61,6 @@ def infer(config, content_encoder, motion_encoder, sequence_model, decoder, chec
                                         log_dir=log_dir)
     generator_full_par = DataParallelWithCallback(generator_full, device_ids=device_ids)
     total_loss = 0
-
     with torch.no_grad():
         with Logger(log_dir=log_dir, visualizer_params=config['visualizer_params'],
                     **infer_params['log_params'], is_train=False) as logger:
@@ -77,6 +73,5 @@ def infer(config, content_encoder, motion_encoder, sequence_model, decoder, chec
                     logger.log_each_iteration(it, loss, x, generated)
                 it += 1
                 print("iter : ", it, " loss: ", loss)
-
     print("reconstruction loss on test data ", total_loss/len(dataloader.dataset))
     return

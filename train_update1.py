@@ -21,13 +21,13 @@ class GeneratorFullModel(torch.nn.Module):
     def forward(self, x):
 
         content_embedding = self.content_encoder(x['image'])
-        # print("content embedding", content_embedding[-1].shape)
+        print("content embedding", content_embedding[-1].shape)
         motion_embedding = self.motion_encoder(x['video'])
-        # print("motion embedding", motion_embedding[-1].shape)
+        print("motion embedding", motion_embedding[-1].shape)
         generated_embedding, h = self.sequence_model(motion_embedding[-1])
-        # print("generated embedding", generated_embedding.shape, type(generated_embedding))
+        print("generated embedding", generated_embedding.shape, type(generated_embedding))
         generated_video = self.decoder(content_embedding[-1], generated_embedding)
-        # print("generated video ", generated_video.shape)
+        print("generated video ", generated_video.shape)
         # print("original video size", x['video'].shape)
         if self.is_video_test_split:
             losses = video_reconstruction_loss(x['test'], generated_video)

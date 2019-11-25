@@ -5,9 +5,9 @@ dataset_params: #Parameters of the dataset
   augmentation_params: #Parameters for train time augmentation
     flip_param:
       time_flip: True #Fliping the order of frames in video
-      horizontal_flip: True #Horizontal fliping
+      horizontal_flip: True #Horizontal flipping
     crop_param:
-      size: [64, 64] #Random croping to this size
+      size: [64, 64] #Random cropping to this size
     resize_param:
       ratio: [0.9, 1.1] #Random resizing in this range
     jitter_param:
