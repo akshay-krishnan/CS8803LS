@@ -1,61 +1,8 @@
-dataset_params:
-  root_dir: data/shapes
-  augmentation_params:
-    flip_param:
-      time_flip: True
-      horizontal_flip: True
-    crop_param:
-      size: [64, 64]
-
-
-model_params:
-  common_params:
-    num_kp: 4
-    kp_variance: 'matrix'
-    num_channels: 3
-  kp_detector_params:
-     temperature: 0.1
-     block_expansion: 16
-     max_features: 128
-     num_blocks: 5
-  generator_params:
-    block_expansion: 16
-    max_features: 128
-    num_blocks: 5
-    num_refinement_blocks: 4
-    dense_motion_params:
-      block_expansion: 16
-      max_features: 128
-      num_blocks: 5
-      use_mask: True
-      use_correction: True
-      mask_embedding_params:
-        use_heatmap: True
-        use_deformed_source_image: True
-        heatmap_type: 'difference'
-        norm_const: 10
-    kp_embedding_params:
-      use_heatmap: True
-      norm_const: 10
-      heatmap_type: 'difference'
-  discriminator_params:
-    kp_embedding_params:
-      norm_const: 10
-    block_expansion: 32
-    max_features: 256
-    num_blocks: 4
-  hourglass_params:
-    block_expansion: 16
-    in_features: 3
-    out_features: 3
-
-
-
 train_params:
   detach_kp_generator: False
   detach_kp_discriminator: True
-  num_epochs: 8
-  epoch_milestones: [4]
+  num_epochs: 80
+  epoch_milestones: [16]
   lr: 2.0e-4
   batch_size: 16
   loss_weights:
@@ -67,33 +14,85 @@ train_params:
     log_freq_iter: 200
     cpk_freq_epoch: 10
 
-reconstruction_params:
-  num_videos: 10
-  format: '.gif'
+dataset_params: #Parameters of the dataset
+  root_dir: data/shapes #Directory containing test and train subfolders with videos, it can be '.gif' or '.mp4' videos or stacked frames (see data/shapes)
+  image_shape: [64, 64, 3] #Shape of individual image for stacked frames
+  augmentation_params: #Parameters for train time augmentation
+    flip_param:
+      time_flip: False #Fliping the order of frames in video
+      horizontal_flip: True #Horizontal flipping
+    crop_param:
+      size: [64, 64] #Random cropping to this size
+    resize_param:
+      ratio: [0.9, 1.1] #Random resizing in this range
+    jitter_param:
+      hue: 0.5 #Random hue jittering
+    rotation_param:
+      degrees: [-10, 10] #Random rotate in this range of degrees
 
-transfer_params:
-  num_pairs: 100
-  format: '.gif'
-  normalization_params:
-    movement_mult: False
-    move_location: True
-    adapt_variance: False
+model_params: #Parameters of the Monkey-Net
+  common_params:
+    num_channels: 3 #number of channels in image
+  generator_params:
+    block_expansion: 16 #Multiplier for number of neurons
+    max_features: 512 #Maximum number of neurons
+    num_blocks: 5 #Number of blocks in UNET
+    num_refinement_blocks: 4 #Number of additional ResBlocks at the end
+    dense_motion_params:
+      block_expansion: 32 #Multiplier for number of neurons
+      max_features: 512 #Maximum number of neuro
+      num_blocks: 5 #Number of blocks in UNET
+      use_mask: True #True for predicting coarse motion
+      use_correction: True #True for predicting fine motion
+      mask_embedding_params: #Parameters of the input to dense_motion module
+        use_heatmap: True #Heatmap representation of keypoints
+        use_deformed_source_image: True #Aproximate deformation of the source image
+        heatmap_type: 'difference' #Heatmap is the difference between driving an a source frame
+        norm_const: 100 #Normalization constant \alpha, 'sum' for using sum normalization
+      num_group_blocks: 2 #Number of initial group blocks
+    kp_embedding_params: #Parameters of the keypoint input to the generator
+      use_heatmap: True #Heatmap representation of keypoints
+      norm_const: 100 #Normalization constant \alpha, 'sum' for using sum normalization
+      heatmap_type: 'difference' #Heatmap is the difference between driving an a source frame
+  discriminator_params:
+    kp_embedding_params: #Parameters of the keypoint input to the discriminator
+      norm_const: 100 #Normalization constant \alpha, 'sum' for using sum normalization
+    block_expansion: 32 #Multiplier for number of neurons
+    max_features: 256 #Maximum number of neurons
+    num_blocks: 4 #Number of blocks
+  content_encoder_params:
+    block_expansion: 16
+    num_blocks: 5
+    max_features: 512
+  motion_encoder_params:
+    block_expansion: 16
+    num_blocks: 5
+    max_features: 512
+  decoder_params:
+  sequence_model_params:
 
-prediction_params:
-  rnn_params:
-     num_features: 1024
-     num_layers: 1
-     dropout: 0
-  predict_variance: True
-  num_epochs: 100
-  lr: 0.001
-  batch_size: 256
-  num_frames: 32
-  init_frames: 1
-  train_size: 100
-  format: '.gif'
+infer_params:
+  batch_size: 4
+  log_params:
+    log_freq_iter: 1 # Log progress this number of iterations
+    cpk_freq_epoch: 5000 # Save checkpoint this number of epochs
 
-visualizer_params:
-  kp_size: 2
-  draw_border: True
-  colormap: 'gist_rainbow'
+analysis_params:
+  batch_size: 1
+  log_params:
+    log_freq_iter: 1 # Log progress this number of iterations
+    cpk_freq_epoch: 5000 # Save checkpoint this number of epochs
+
+reconstruction_params: #Parameters for reconstruction task
+  num_videos: null #Number of videos to use in reconstruction, null for all avaliable
+  format: '.gif' #Number for saving videos '.gif' or '.mp4', the final results will be also saved in loosless '.png'
+
+transfer_params: #Parameters for transfer task
+  batch_size: 1
+  log_params:
+    log_freq_iter: 1 # Log progress this number of iterations
+
+visualizer_params: # Visualization parameters
+  kp_size: 2 #Size of keypoint in visualization
+  draw_border: False #True to draw a white border around each image
+  colormap: 'gist_rainbow' #Colormap for keypoints

@@ -15,7 +15,7 @@ from convolutional_rnn import Conv2dGRU
 from modules.frame_decoder import FrameDecoder
 from augmentation import ContentMotionTestTransform
 
-from train_update1 import  train
+from train_update1 import train
 from reconstruction import reconstruction
 from transfer import transfer
 from prediction import prediction
@@ -61,12 +61,12 @@ if __name__ == "__main__":
     if opt.verbose:
         print("Motion encoder architecture, \n", motion_encoder)
 
-    sequence_model = Conv2dGRU(128, 128, 3)
+    sequence_model = Conv2dGRU(256, 256, 3, num_layers=2)
     sequence_model.to(opt.device_ids[0])
     if opt.verbose:
         print("sequence model architecture, \n", sequence_model)
 
-    decoder = FrameDecoder(16, 256, 3)
+    decoder = FrameDecoder(in_features=512, num_blocks=5)
     decoder.to(opt.device_ids[0])
     if opt.verbose:
         print("decoder model architecture, \n", decoder)

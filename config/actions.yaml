@@ -19,13 +19,8 @@ dataset_params: #Parameters of the dataset
 model_params: #Parameters of the Monkey-Net
   common_params:
     num_channels: 3 #number of channels in image
-  kp_detector_params:
-     temperature: 0.1 #Softmax temperature
-     block_expansion: 32 #Multiplier for number of neurons
-     max_features: 512 #Maximum number of neurons
-     num_blocks: 5 #Number of blocks in UNET
   generator_params:
-    block_expansion: 32 #Multiplier for number of neurons
+    block_expansion: 16 #Multiplier for number of neurons
     max_features: 512 #Maximum number of neurons
     num_blocks: 5 #Number of blocks in UNET
     num_refinement_blocks: 4 #Number of additional ResBlocks at the end
@@ -53,12 +48,12 @@ model_params: #Parameters of the Monkey-Net
     num_blocks: 4 #Number of blocks
   content_encoder_params:
     block_expansion: 16
-    num_blocks: 3
-    max_features: 256
+    num_blocks: 5
+    max_features: 512
   motion_encoder_params:
     block_expansion: 16
-    num_blocks: 3
-    max_features: 256
+    num_blocks: 5
+    max_features: 512
   decoder_params:
   sequence_model_params:
 

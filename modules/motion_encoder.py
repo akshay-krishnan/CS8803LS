@@ -37,9 +37,10 @@ class Encoder(nn.Module):
         kernel_size = 3
         padding = 1
         for i in range(num_blocks):
-            down_blocks.append(DownBlock3D(in_features if i == 0 else min(max_features, block_expansion * (2 ** i)),
-                                           min(max_features, block_expansion * (2 ** (i + 1))),
+            down_blocks.append(DownBlock3D(in_features if i == 0 else min(max_features, block_expansion * (2 ** (i-1))),
+                                           min(max_features, block_expansion * (2 **i)),
                                            kernel_size=kernel_size, padding=padding))
+            self.out_features = min(max_features, block_expansion * (2 **i))
 
         # down_blocks.append(nn.Conv3d(in_channels=min(max_features, block_expansion * (2 ** num_blocks)),
         #                              out_channels=1, kernel_size=kernel_size, padding=padding))
@@ -56,6 +57,8 @@ class Encoder(nn.Module):
         outs.append(outs[-1].transpose(-3,-4))
         return outs
 
+    def getOutputFeatures(self):
+        return self.out_features
 
 # class MotionEncoder(nn.Module):
 #     def __init__(self):
